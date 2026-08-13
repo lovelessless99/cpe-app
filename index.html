@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CPE 五題衝刺</title>
+<meta name="description" content="CPE 大學程式能力檢定的每日複習工具：倒數、30 天課表、陷阱卡、661 題題庫、技巧導讀與歷屆真題。">
+<meta name="theme-color" content="#080B11" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EDEFF4" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CPE 衝刺">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hbar">
+      <span class="brand">CPE <b>五題衝刺</b></span>
+      <span class="spacer"></span>
+      <span class="chip" id="daypill">DAY 1</span>
+      <button class="iconbtn" id="opencfg" aria-label="設定考試日期">設定</button>
+    </div>
+    <div class="board" id="board" aria-hidden="true"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ═══ 今日 ═══ -->
+  <section class="view on" id="v-today">
+    <div class="stack">
+
+      <div class="hero">
+        <div class="eyebrow">距離下次考試</div>
+        <div class="cdgrid">
+          <span class="cdnum" id="cdnum">—</span>
+          <span class="cdunit" id="cdunit">天</span>
+        </div>
+        <div class="mono" id="cddate" style="font-size:13px;color:var(--ink-2)">—</div>
+        <div class="cdmeta" id="cdmeta"></div>
+        <div class="estnote" id="cdnote"></div>
+      </div>
+
+      <div class="card" id="daycard">
+        <div class="dayhead">
+          <span class="daynum" id="dnum">1</span>
+          <div style="flex:1;min-width:0">
+            <div class="eyebrow" id="dweek">WEEK 1</div>
+            <h2 id="dtitle">—</h2>
+          </div>
+        </div>
+        <ul class="tasks" id="dtasks"></ul>
+        <div class="row" style="margin-top:13px">
+          <button class="btn sm" id="prev">← 前一天</button>
+          <button class="btn sm" id="next">後一天 →</button>
+          <span class="spacer"></span>
+          <button class="btn sm" id="jumptoday">今天</button>
+        </div>
+      </div>
+
+      <div class="card flat">
+        <div class="eyebrow" style="margin-bottom:9px">進度檢查點</div>
+        <div id="cps"></div>
+      </div>
+
+      <div class="card flat">
+        <div class="eyebrow" style="margin-bottom:9px">考場配速</div>
+        <div class="stack-sm" style="font-size:13.5px;color:var(--ink-2)">
+          <div><span class="mono" style="color:var(--ink)">0:00–0:10</span>　掃完 7 題，分「會 / 可能 / 不會」</div>
+          <div><span class="mono" style="color:var(--ink)">0:10–1:10</span>　砍掉 3 題最簡單的 ☆</div>
+          <div><span class="mono" style="color:var(--ink)">1:10–2:20</span>　攻第 4、5 題</div>
+          <div><span class="mono" style="color:var(--ink)">2:20–3:00</span>　回頭 debug，補測邊界</div>
+        </div>
+        <div class="warn" style="margin-top:12px">
+          任一題卡 <b>25 分鐘</b>沒思路就換題。第 6、7 題不讀——<b>放掉它們才拿得到 5 題</b>。
+        </div>
+      </div>
+
+      <div class="card flat">
+        <div class="eyebrow" style="margin-bottom:9px">考試當天流程</div>
+        <div class="stack-sm mono" style="font-size:12.5px;color:var(--ink-2)">
+          <div><b style="color:var(--ink)">17:30</b>　報到</div>
+          <div><b style="color:var(--ink)">17:40–18:30</b>　練習時段 · 確認編譯器與 bits/stdc++.h</div>
+          <div><b style="color:var(--wa)">18:00</b>　關門，之後不得入場</div>
+          <div><b style="color:var(--ink)">18:40–21:40</b>　正式考試 3 小時</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ 題庫 ═══ -->
+  <section class="view" id="v-list">
+    <div class="card flat" style="margin-bottom:13px">
+      <div class="row">
+        <div style="flex:1">
+          <div class="eyebrow">題庫進度</div>
+          <div class="lead" id="listlead" style="margin-top:2px">—</div>
+        </div>
+        <div class="mono" style="font-size:21px;font-weight:700" id="pcount">0/0</div>
+      </div>
+      <div class="prog"><i id="pbar" style="width:0%"></i></div>
+    </div>
+
+    <div class="filters">
+      <span class="seg" id="starseg">
+        <button data-s="1" class="on">☆ 49</button>
+        <button data-s="2">☆☆ 284</button>
+        <button data-s="3">☆☆☆ 328</button>
+      </span>
+      <input class="search" id="q" type="search" placeholder="搜尋題名或題號" aria-label="搜尋題目">
+    </div>
+    <div class="card flat plist" id="plist"></div>
+    <div class="foot">題名經 uHunt 官方 UVa 題庫逐筆驗證<br>有 ZJ 代號者連 ZeroJudge，其餘連 vjudge</div>
+  </section>
+
+  <!-- ═══ 卡片 ═══ -->
+  <section class="view" id="v-cards">
+    <div class="deckbar">
+      <span class="seg" id="deckseg">
+        <button data-d="all" class="on">全部</button>
+        <button data-d="trap">陷阱</button>
+        <button data-d="api">API</button>
+      </span>
+      <span class="spacer"></span>
+      <span class="deckcount" id="dkc">—</span>
+    </div>
+    <div id="deckwrap">
+      <div class="flip" id="flip">
+        <div class="flipin">
+          <div class="face front">
+            <div class="taghint" id="ctag">—</div>
+            <div class="q" id="cq">—</div>
+            <div class="tapme">點一下看答案</div>
+          </div>
+          <div class="face back">
+            <div class="taghint">解答</div>
+            <div class="a" id="ca">—</div>
+            <div class="tapme">點一下翻回去</div>
+          </div>
+        </div>
+      </div>
+      <div class="deckbtns">
+        <button class="btn" id="again">再看一次</button>
+        <button class="btn pri" id="known">記熟了 ✓</button>
+      </div>
+      <div class="deckbar" style="margin-top:12px">
+        <button class="btn sm" id="shuffle">洗牌</button>
+        <button class="btn sm" id="resetcards">重設已記熟</button>
+      </div>
+    </div>
+    <div class="done-msg" id="deckdone" style="display:none">
+      <div class="eyebrow" style="margin-bottom:6px">整副牌清空</div>
+      <div>這副全部標記為記熟。<br>按「重設已記熟」再來一輪，或換一副。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 技巧 ═══ -->
+  <section class="view" id="v-skill">
+    <div class="card flat" style="margin-bottom:13px">
+      <div class="eyebrow" style="margin-bottom:4px">技巧導讀</div>
+      <p class="lead">每個技巧包含<b>何時用</b>、<b>想法</b>（為什麼這樣寫是對的）、可複製的模板，以及對應題目。
+      標 <span class="lv lv1">必修</span> 的是拿 5 題非會不可的，<span class="lv lv2">選修</span> 是有餘力才碰。</p>
+    </div>
+    <div class="stack" id="skills"></div>
+  </section>
+
+  <!-- ═══ 速查 ═══ -->
+  <section class="view" id="v-ref">
+    <div class="stack">
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:3px">效率預算</div>
+        <h3 style="margin-bottom:5px">看 n 決定寫什麼複雜度</h3>
+        <p class="lead" style="margin-bottom:11px">判題機約每秒 <span class="mono">10<sup>8</sup></span> 次基本運算，時限通常 1–3 秒。<b>讀完 n 的範圍就知道能不能暴力</b>。</p>
+        <div class="tw"><table class="budget" id="budget"></table></div>
+      </div>
+      <div class="warn">
+        <b>最常見的誤判：</b>n ≤ 5000 時 O(n²) 是 2500 萬次，<b>可以過</b>；n = 10<sup>5</sup> 時 O(n²) 是 100 億次，<b>必 TLE</b>。
+        n 只差 20 倍，運算量差 400 倍。
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:3px">容器 API</div>
+        <h3 style="margin-bottom:11px">操作與複雜度</h3>
+        <div id="apis" class="stack"></div>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:3px">決策表</div>
+        <h3 style="margin-bottom:5px">該用哪個容器</h3>
+        <p class="lead" style="margin-bottom:11px">先問「key 是不是小範圍整數」——是的話直接開 <span class="mono">vector</span> 陣列，比任何關聯容器都快也好寫。</p>
+        <div class="tw"><table id="pick"></table></div>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:3px">語言支援</div>
+        <h3 style="margin-bottom:11px">哪些寫法能放心用</h3>
+        <div class="tw"><table class="apitbl" id="lang"></table></div>
+        <div class="warn" style="margin-top:11px"><b>17:40–18:30 的練習時段就把這些編一次確認。</b>練習時用什麼寫法，考場就用什麼。</div>
+      </div>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:3px">數值上限</div>
+        <h3 style="margin-bottom:11px">什麼時候要換 long long</h3>
+        <div class="tw"><table class="apitbl" id="lim"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 考古 ═══ -->
+  <section class="view" id="v-past">
+    <div class="card flat" style="margin-bottom:12px">
+      <div class="eyebrow" style="margin-bottom:6px">高頻重複題</div>
+      <p class="lead" style="margin-bottom:10px">考過不只一次。CPE 題目全取自 UVa 舊題且大量輪替——這是刷考古題 CP 值最高的原因。</p>
+      <div id="hots" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+    <div id="exams"></div>
+    <div class="foot">2019–2025 共 14 場 · 每場 7 題 · 98 題題名全部驗證<br>資料來源：官方 history.php 與公開整理站</div>
+  </section>
+
+</main>
+
+<nav>
+  <div class="navin">
+    <button class="tab on" data-v="today"><span class="ic">D</span><span class="lb">今日</span></button>
+    <button class="tab" data-v="list"><span class="ic">☆</span><span class="lb">題庫</span></button>
+    <button class="tab" data-v="cards"><span class="ic">!</span><span class="lb">卡片</span></button>
+    <button class="tab" data-v="skill"><span class="ic">{}</span><span class="lb">技巧</span></button>
+    <button class="tab" data-v="ref"><span class="ic">O</span><span class="lb">速查</span></button>
+    <button class="tab" data-v="past"><span class="ic">#</span><span class="lb">考古</span></button>
+  </div>
+</nav>
+
+<dialog id="cfg">
+  <form method="dialog" class="dlg">
+    <div>
+      <h2 style="margin-bottom:4px">設定</h2>
+      <p class="lead">2026 年場次官方尚未公告，日期請以官網為準。</p>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:5px">下次考試日期</div>
+      <input type="date" id="examdate">
+      <p class="estnote">報名區間會由考試日期推估（開始約 15 天前、截止約 5 天前）。查到官方公告後請回來改成正確日期。</p>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:5px">計畫起算日</div>
+      <input type="date" id="startdate">
+      <p class="estnote">30 天課表從這天算 Day 1。</p>
+    </div>
+    <div class="field-in">
+      <button class="btn pri" value="save" id="cfgsave">儲存</button>
+      <button class="btn" value="cancel">取消</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="js/problems.js"></script>
+<script src="js/data.js"></script>
+<script src="js/hl.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

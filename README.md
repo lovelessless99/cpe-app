@@ -1,0 +1,71 @@
+# CPE 五題衝刺
+
+手機用的 CPE（大學程式能力檢定）每日複習 PWA。可安裝到主畫面、離線可用。
+
+**目標定位**：每場 7 題中穩定拿下 5 題。前 3 題（☆）閉著眼睛拿、第 4–5 題（排序／貪心／BFS／入門 DP）主攻、**第 6–7 題直接放棄**——7 題全解出者僅佔 0.2%，放掉它們才拿得到 5 題。
+
+## 功能
+
+| 分頁 | 內容 |
+|---|---|
+| 今日 | 考試倒數、報名區間、30 天課表的當日進度、進度檢查點、考場配速 |
+| 題庫 | ☆ 49 題 / ☆☆ 284 題 / ☆☆☆ 328 題，共 **661 題**，可搜尋、可打勾、進度存本機 |
+| 卡片 | 62 張翻卡（陷阱 / API・複雜度兩副），標記記熟後從牌堆移除 |
+| 技巧 | 16 個技巧的「何時用 / **想法** / 模板 / 對應題目」，程式碼有語法上色 |
+| 速查 | 效率預算表（看 n 決定複雜度）、容器 API 複雜度、決策表、語言支援、數值上限 |
+| 考古 | 2019–2025 共 14 場歷屆真題，含高頻重複題 |
+
+## 資料可信度
+
+- **UVa 題名全部經 [uHunt API](https://uhunt.onlinejudge.org/api/p) 的官方題庫（4996 題）逐筆驗證。**
+  最初從整理站抓取的題名有可辨識的錯位（例如 `124` 被標成 Dungeon Master，實際是 Following Orders；`11060` 被標成 Ultra-QuickSort，實際是 Beverages），已全部以官方資料覆蓋。
+- ZeroJudge 代號來自公開整理站，無法程式化驗證；因此**連結以 UVa 題號為主鍵**，有 ZJ 代號者連 ZeroJudge，其餘連 vjudge。
+- 歷屆 14 場 98 題題名同樣全部驗證通過。
+- **考試日期為預設值，不是官方公告**。2026 場次尚未公布，請到 [官網](https://cpe.cse.nsysu.edu.tw/) 查到日期後在 App 右上「設定」填入。報名區間由考試日期推估（開始約 15 天前、截止約 5 天前）。
+
+## 本機執行
+
+Service Worker 需要 http(s)，直接雙擊 `index.html` 不會註冊成功（其餘功能正常）。要完整測試 PWA：
+
+```bash
+python -m http.server 8000
+# 或
+npx serve .
+```
+
+然後開 http://localhost:8000
+
+## 部署到 GitHub Pages
+
+推上 `main` 後，到 repo 的 **Settings → Pages → Source** 選 `Deploy from a branch`，branch 選 `main` / `/ (root)`，儲存。約一分鐘後上線於：
+
+```
+https://<你的帳號>.github.io/cpe-app/
+```
+
+`.nojekyll` 已加入，避免 Jekyll 處理掉檔案。
+
+## 安裝到手機
+
+- **iPhone**：Safari 開啟 → 分享 → 加入主畫面
+- **Android**：Chrome 開啟 → 選單 → 安裝應用程式
+
+裝好之後離線也能開，進度存在裝置本機（localStorage），換裝置不會同步。
+
+## 檔案結構
+
+```
+index.html              頁面骨架
+css/style.css           視覺系統（深色為主體，淺色完整對位）
+js/problems.js          661 題題庫 + 14 場歷屆（自動產生，勿手改）
+js/data.js              課表、陷阱卡、技巧導讀（手動維護）
+js/hl.js                C++ 語法上色器（自己寫，零依賴）
+js/app.js               應用邏輯
+sw.js                   Service Worker（app shell 快取）
+manifest.webmanifest    PWA manifest
+icons/                  圖示（七格題列：5 格填滿、2 格空心）
+```
+
+## 改版
+
+改任何檔案後，把 `sw.js` 裡的 `VERSION` 加一（`cpe-v1` → `cpe-v2`），否則使用者裝置上的舊快取不會更新。

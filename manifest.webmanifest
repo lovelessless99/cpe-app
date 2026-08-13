@@ -1,0 +1,19 @@
+{
+  "name": "CPE 五題衝刺",
+  "short_name": "CPE 衝刺",
+  "description": "CPE 大學程式能力檢定每日複習：倒數、課表、陷阱卡、661 題題庫與歷屆真題。",
+  "lang": "zh-Hant",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080B11",
+  "theme_color": "#080B11",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
