@@ -15,48 +15,38 @@
   const todayLocal = () => { const n = new Date(); n.setHours(0, 0, 0, 0); return n; };
   const parseISO = s => new Date(s + 'T00:00:00');
   const daysBetween = (a, b) => Math.round((b - a) / 864e5);
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-  /* ── 設定 ─────────────────────────────────────────────── */
+  /* ── 設定與倒數 ───────────────────────────────────────── */
   function defaultExam() {
-    // 2026 場次未公告。CPE 一年四場（約 3、5、10、12 月），先給一個保守預設，
-    // 使用者查到官方公告後在「設定」改成正確日期。
     const t = todayLocal();
-    const guesses = ['2026-10-14', '2026-12-09', '2027-03-24'];
-    for (const g of guesses) if (parseISO(g) > t) return g;
+    for (const g of ['2026-10-14', '2026-12-09', '2027-03-24']) if (parseISO(g) > t) return g;
     return iso(new Date(t.getTime() + 60 * 864e5));
   }
   const getExam = () => S.get('exam', null) || defaultExam();
   const getStart = () => { let s = S.get('start', null); if (!s) { s = iso(todayLocal()); S.set('start', s); } return s; };
-  const isExamConfirmed = () => !!S.get('exam', null);
 
-  /* ── 倒數 ─────────────────────────────────────────────── */
   function renderCountdown() {
-    const exam = parseISO(getExam());
-    const t = todayLocal();
+    const exam = parseISO(getExam()), t = todayLocal();
     const left = daysBetween(t, exam);
     $('#cdnum').textContent = left >= 0 ? left : '—';
     $('#cdunit').textContent = left === 0 ? '就是今天' : '天';
     $('#cddate').textContent = getExam().replace(/-/g, ' / ') + '（' + '日一二三四五六'[exam.getDay()] + '）';
 
-    // 報名區間推估：開始約 15 天前、截止約 5 天前
     const regOpen = new Date(exam.getTime() - 15 * 864e5);
     const regShut = new Date(exam.getTime() - 5 * 864e5);
     const meta = $('#cdmeta'); meta.innerHTML = '';
-    const addPill = (cls, txt) => meta.appendChild(el('span', 'pill' + (cls ? ' ' + cls : ''), txt));
-
-    if (left < 0) {
-      addPill('shut', '考試日期已過，請到設定更新');
-    } else if (t < regOpen) {
-      addPill('', '報名尚未開始 · 推估 ' + iso(regOpen).slice(5).replace('-', '/') + ' 開放');
-      addPill('', '距報名 ' + daysBetween(t, regOpen) + ' 天');
+    const add = (cls, txt) => meta.appendChild(el('span', 'pill' + (cls ? ' ' + cls : ''), txt));
+    if (left < 0) add('shut', '考試日期已過，請到設定更新');
+    else if (t < regOpen) {
+      add('', '報名尚未開始 · 推估 ' + iso(regOpen).slice(5).replace('-', '/') + ' 開放');
+      add('', '距報名 ' + daysBetween(t, regOpen) + ' 天');
     } else if (t <= regShut) {
-      addPill('open', '報名中 · 推估 ' + iso(regShut).slice(5).replace('-', '/') + ' 截止');
-      addPill('open', '剩 ' + daysBetween(t, regShut) + ' 天可報名');
-    } else {
-      addPill('shut', '報名推估已截止');
-    }
+      add('open', '報名中 · 推估 ' + iso(regShut).slice(5).replace('-', '/') + ' 截止');
+      add('open', '剩 ' + daysBetween(t, regShut) + ' 天可報名');
+    } else add('shut', '報名推估已截止');
 
-    $('#cdnote').innerHTML = isExamConfirmed()
+    $('#cdnote').innerHTML = S.get('exam', null)
       ? '報名區間為<b>推估值</b>（開始約 15 天前、截止約 5 天前），實際以官網公告為準。'
       : '⚠️ 這是<b>預設日期，不是官方公告</b>。2026 場次尚未公布，請到 <a href="https://cpe.cse.nsysu.edu.tw/" target="_blank" rel="noopener">官網</a> 查到日期後按右上「設定」填入。';
   }
@@ -68,6 +58,27 @@
   function renderBoard() {
     const b = $('#board'); b.innerHTML = '';
     for (let i = 0; i < 7; i++) b.appendChild(el('div', 'cell ' + (i < 5 ? 'get' : 'drop')));
+  }
+
+  function renderStats() {
+    const box = $('#stats'); box.innerHTML = '';
+    const d1 = S.get('done1', []).length;
+    const known = S.get('known', []).length;
+    const qh = S.get('quizhist', []);
+    const best = qh.length ? Math.max(...qh) : 0;
+    const items = [
+      ['一星進度', d1 + '/49', d1 / 49],
+      ['卡片記熟', known + '/' + CARDS.length, known / CARDS.length],
+      ['抽考最佳', best + '/10', best / 10]
+    ];
+    items.forEach(([lbl, val, pct]) => {
+      const c = el('div', 'stat');
+      c.appendChild(el('div', 'eyebrow', lbl));
+      c.appendChild(el('div', 'statval', val));
+      const p = el('div', 'prog'); const i = el('i'); i.style.width = (pct * 100) + '%';
+      p.appendChild(i); c.appendChild(p);
+      box.appendChild(c);
+    });
   }
 
   function renderDay() {
@@ -97,7 +108,6 @@
       });
       add('練習', box);
     }
-
     const cps = $('#cps'); cps.innerHTML = '';
     CPS.forEach(([day, goal, fix]) => {
       const r = el('div', 'ck' + (day === viewDay ? ' now' : ''));
@@ -106,20 +116,122 @@
       b.appendChild(el('div', null, '沒達到就：' + fix));
       r.appendChild(b); cps.appendChild(r);
     });
+    renderStats();
   }
 
-  /* ── 卡片 ─────────────────────────────────────────────── */
-  let deck = [], cur = 0, mode = S.get('deckmode', 'all');
+  /* ── 詳解面板 ─────────────────────────────────────────── */
+  function openSheet(p) {
+    const s = SOL[p.uva];
+    $('#shmeta').textContent = 'UVa ' + p.uva + (p.zj ? ' · ' + p.zj : '') + (p.tag ? ' · ' + p.tag : '');
+    $('#shtitle').textContent = p.title;
+    const b = $('#shbody'); b.innerHTML = '';
+
+    if (!s) {
+      const d = el('div', 'card flat');
+      d.appendChild(el('div', 'lead', '這一題還沒有詳解。目前完整詳解涵蓋一顆星 49 題——那是每場考試必中 1 題、也是你要穩拿的前 3 題。'));
+      b.appendChild(d);
+    } else {
+      const field = (lbl, html, cls) => {
+        const f = el('div', 'field');
+        f.appendChild(el('div', 'lbl', lbl));
+        const t = el('div', 'txt' + (cls ? ' ' + cls : ''));
+        t.innerHTML = html; f.appendChild(t);
+        return f;
+      };
+      b.appendChild(field('題意', s.q));
+      b.appendChild(field('解法', s.h, 'idea'));
+      b.appendChild(field('陷阱', s.t, 'trap'));
+
+      const sn = el('div', 'snip');
+      const sh = el('div', 'sniphead');
+      sh.appendChild(el('h3', null, 'UVa ' + p.uva + '.cpp'));
+      const cp = el('button', 'btn sm', '複製');
+      cp.onclick = () => navigator.clipboard?.writeText(s.c).then(() => {
+        cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
+      }).catch(() => { });
+      sh.appendChild(cp);
+      sn.appendChild(sh);
+      const pre = el('pre'); const code = el('code', 'blk');
+      code.innerHTML = window.highlightCpp(s.c);
+      pre.appendChild(code); sn.appendChild(pre);
+      b.appendChild(sn);
+    }
+
+    const links = el('div', 'plinks');
+    if (p.zj) { const a = el('a', 'plink', 'ZeroJudge ' + p.zj + ' ↗'); a.href = zjURL(p.zj); a.target = '_blank'; a.rel = 'noopener'; links.appendChild(a); }
+    const a2 = el('a', 'plink', 'vjudge UVa ' + p.uva + ' ↗'); a2.href = uvaURL(p.uva); a2.target = '_blank'; a2.rel = 'noopener';
+    links.appendChild(a2);
+    b.appendChild(links);
+
+    const sheet = $('#sheet');
+    sheet.hidden = false;
+    requestAnimationFrame(() => sheet.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSheet() {
+    const sheet = $('#sheet');
+    sheet.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => { sheet.hidden = true; }, 260);
+  }
+  $('#sheetclose').onclick = closeSheet;
+  $('#sheetbg').onclick = closeSheet;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
+
+  /* ── 題庫 ─────────────────────────────────────────────── */
+  let star = S.get('star', 1), query = '';
+  const bank = () => (star === 1 ? P1 : star === 2 ? P2 : P3);
+  const bankKey = () => 'done' + star;
+
+  function renderList() {
+    const list = bank(), done = S.get(bankKey(), []);
+    const q = query.trim().toLowerCase();
+    const shown = q ? list.filter(p => p.title.toLowerCase().includes(q) || String(p.uva).includes(q) || (p.zj && p.zj.includes(q))) : list;
+    const box = $('#plist'); box.innerHTML = '';
+    if (!shown.length) box.appendChild(el('div', 'empty', '找不到符合「' + query + '」的題目'));
+    shown.forEach(p => {
+      const idx = list.indexOf(p), ok = done.includes(idx);
+      const row = el('div', 'p' + (ok ? ' ok' : ''));
+      row.appendChild(el('span', 'num', String(idx + 1)));
+      const btn = el('button', 'box', '✓');
+      btn.setAttribute('aria-label', (ok ? '取消完成 ' : '標記完成 ') + p.title);
+      btn.onclick = e => {
+        e.stopPropagation();
+        const d = S.get(bankKey(), []); const k = d.indexOf(idx);
+        if (k < 0) d.push(idx); else d.splice(k, 1);
+        S.set(bankKey(), d); renderList(); renderStats();
+      };
+      row.appendChild(btn);
+      const m = el('div', 'pmeta');
+      const nm = el('div', 'pname', p.title);
+      m.appendChild(nm);
+      m.appendChild(el('span', 'psub', 'UVa ' + p.uva + (p.zj ? ' · ' + p.zj : '') + (p.tag ? ' · ' + p.tag : '')));
+      row.appendChild(m);
+      if (SOL[p.uva]) row.appendChild(el('span', 'hasol', '詳解'));
+      row.tabIndex = 0;
+      row.onclick = () => openSheet(p);
+      row.onkeydown = e => { if (e.key === 'Enter') openSheet(p); };
+      box.appendChild(row);
+    });
+    $('#pcount').textContent = done.length + '/' + list.length;
+    $('#pbar').style.width = (list.length ? done.length / list.length * 100 : 0) + '%';
+    $('#listlead').textContent = star === 1
+      ? '一顆星 49 題 — 每場至少 1 題出自這份，全部附完整詳解'
+      : star === 2 ? '二顆星 284 題 — 學完資料結構後的主戰場'
+        : '三顆星 328 題 — 第 6、7 題的範圍，這個月不必碰';
+  }
+
+  /* ── 翻卡 ─────────────────────────────────────────────── */
+  let deck = [], cur = 0, dmode = S.get('deckmode', 'all');
   const inMode = i => {
     const t = CARDS[i][0];
-    if (mode === 'trap') return TRAPTAGS.includes(t);
-    if (mode === 'api') return !TRAPTAGS.includes(t);
+    if (dmode === 'trap') return TRAPTAGS.includes(t);
+    if (dmode === 'api') return !TRAPTAGS.includes(t);
     return true;
   };
   function buildDeck() {
     const known = S.get('known', []);
-    deck = CARDS.map((c, i) => i).filter(i => inMode(i) && !known.includes(i));
-    for (let i = deck.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[deck[i], deck[j]] = [deck[j], deck[i]]; }
+    deck = shuffle(CARDS.map((c, i) => i).filter(i => inMode(i) && !known.includes(i)));
     cur = 0; showCard();
   }
   function showCard() {
@@ -137,48 +249,155 @@
     $('#ca').innerHTML = c[2];
   }
 
-  /* ── 題庫 ─────────────────────────────────────────────── */
-  let star = S.get('star', 1), query = '';
-  const bank = () => (star === 1 ? P1 : star === 2 ? P2 : P3);
-  const bankKey = () => 'done' + star;
+  /* ── 抽考 ─────────────────────────────────────────────── */
+  const BUDGET = [
+    ['n ≤ 11', 'O(n!)', '全排列暴力 · next_permutation'],
+    ['n ≤ 22', 'O(2ⁿ)', '子集列舉 · bitmask'],
+    ['n ≤ 100', 'O(n³)', '三層迴圈 · Floyd · 區間 DP'],
+    ['n ≤ 1000', 'O(n²·log n)', '雙層迴圈裡再帶二分'],
+    ['n ≤ 5000', 'O(n²)', '雙層迴圈 · LCS · O(n²) 的 LIS'],
+    ['n ≤ 10⁵', 'O(n log n)', '排序 · set/map · 二分'],
+    ['n ≤ 10⁶', 'O(n)', '掃一遍 · 前綴和 · 雙指針 · 質數篩'],
+    ['n ≥ 10⁷', 'O(log n) / O(1)', '快速冪 · 純數學公式']
+  ];
 
-  function renderList() {
-    const list = bank();
-    const done = S.get(bankKey(), []);
-    const q = query.trim().toLowerCase();
-    const shown = q ? list.filter(p => p.title.toLowerCase().includes(q) || String(p.uva).includes(q) || (p.zj && p.zj.includes(q))) : list;
+  let quiz = [], qi = 0, score = 0, streak = 0, maxStreak = 0, wrong = [];
 
-    const box = $('#plist'); box.innerHTML = '';
-    if (!shown.length) { box.appendChild(el('div', 'empty', '找不到符合「' + query + '」的題目')); }
-    shown.forEach(p => {
-      const idx = list.indexOf(p);
-      const ok = done.includes(idx);
-      const row = el('div', 'p' + (ok ? ' ok' : ''));
-      row.appendChild(el('span', 'num', String(idx + 1)));
-      const btn = el('button', 'box', '✓');
-      btn.setAttribute('aria-label', (ok ? '取消完成 ' : '標記完成 ') + p.title);
-      btn.onclick = () => {
-        const d = S.get(bankKey(), []);
-        const k = d.indexOf(idx);
-        if (k < 0) d.push(idx); else d.splice(k, 1);
-        S.set(bankKey(), d); renderList();
-      };
-      row.appendChild(btn);
-      const m = el('div', 'pmeta');
-      const a = el('a', 'pname', p.title);
-      a.href = linkFor(p); a.target = '_blank'; a.rel = 'noopener';
-      m.appendChild(a);
-      m.appendChild(el('span', 'psub', 'UVa ' + p.uva + (p.zj ? ' · ' + p.zj : '') + (p.tag ? ' · ' + p.tag : '')));
-      row.appendChild(m);
-      box.appendChild(row);
+  function makeQuiz() {
+    const items = [];
+    // A. 技巧配對：給題意，選正確技巧
+    const tagged = P1.filter(p => p.tag && SOL[p.uva]);
+    const allTags = [...new Set(P1.map(p => p.tag))];
+    shuffle(tagged.slice()).slice(0, 4).forEach(p => {
+      const opts = shuffle([p.tag, ...shuffle(allTags.filter(t => t !== p.tag)).slice(0, 3)]);
+      items.push({
+        type: '技巧配對', ask: SOL[p.uva].q,
+        sub: 'UVa ' + p.uva + ' — ' + p.title,
+        opts, ans: p.tag,
+        why: SOL[p.uva].h
+      });
     });
+    // B. 效率預算：給 n，選複雜度
+    shuffle(BUDGET.slice()).slice(0, 3).forEach(b => {
+      const opts = shuffle([b[1], ...shuffle(BUDGET.filter(x => x[1] !== b[1])).slice(0, 3).map(x => x[1])]);
+      items.push({
+        type: '效率預算', ask: '題目的 n 範圍是 ' + b[0] + '，該寫什麼複雜度？',
+        sub: '判題機每秒約 10⁸ 次運算', opts, ans: b[1], why: b[2]
+      });
+    });
+    // C. 陷阱回想：自評
+    shuffle(CARDS.map((c, i) => i)).slice(0, 3).forEach(i => {
+      items.push({ type: '陷阱回想 · 自評', ask: CARDS[i][1], sub: CARDS[i][0], self: true, why: CARDS[i][2] });
+    });
+    return shuffle(items);
+  }
 
-    $('#pcount').textContent = done.length + '/' + list.length;
-    $('#pbar').style.width = (list.length ? done.length / list.length * 100 : 0) + '%';
-    $('#listlead').textContent = star === 1
-      ? '一顆星 49 題 — 每場考試至少 1 題出自這份'
-      : star === 2 ? '二顆星 284 題 — 學完資料結構後的主戰場'
-        : '三顆星 328 題 — 第 6、7 題的範圍，這個月不必碰';
+  function startQuiz() {
+    quiz = makeQuiz(); qi = 0; score = 0; streak = 0; maxStreak = 0; wrong = [];
+    $('#quizintro').style.display = 'none';
+    $('#quizdone').style.display = 'none';
+    $('#quizrun').style.display = '';
+    showQ();
+  }
+
+  function showQ() {
+    const q = quiz[qi];
+    $('#qprog').textContent = (qi + 1) + ' / ' + quiz.length;
+    $('#qscore').textContent = '答對 ' + score;
+    const C = 2 * Math.PI * 16;
+    $('#ring').style.strokeDasharray = C;
+    $('#ring').style.strokeDashoffset = C * (1 - qi / quiz.length);
+    const st = $('#streak');
+    st.textContent = streak >= 2 ? '🔥 ' + streak : '';
+    st.className = 'streak' + (streak >= 3 ? ' hot' : '');
+
+    $('#qtype').textContent = q.type;
+    $('#qtext').innerHTML = q.ask;
+    $('#qsub').textContent = q.sub || '';
+    $('#qreveal').style.display = 'none';
+    $('#qnext').style.display = 'none';
+    const opts = $('#qopts'); opts.innerHTML = '';
+
+    if (q.self) {
+      $('#qself').style.display = '';
+      $('#qself').querySelectorAll('button').forEach(b => b.disabled = false);
+    } else {
+      $('#qself').style.display = 'none';
+      q.opts.forEach(o => {
+        const b = el('button', 'opt', o);
+        b.onclick = () => answer(o === q.ans, b, q);
+        opts.appendChild(b);
+      });
+    }
+  }
+
+  function answer(ok, btn, q) {
+    $('#qopts').querySelectorAll('.opt').forEach(b => {
+      b.disabled = true;
+      if (b.textContent === q.ans) b.classList.add('right');
+    });
+    if (btn && !ok) btn.classList.add('wrong');
+    finishQ(ok, q);
+  }
+
+  function finishQ(ok, q) {
+    if (ok) { score++; streak++; maxStreak = Math.max(maxStreak, streak); }
+    else { streak = 0; wrong.push(q); }
+    $('#qscore').textContent = '答對 ' + score;
+    const rv = $('#qreveal');
+    rv.innerHTML = (ok ? '<b class="ok">答對</b>　' : '<b class="ng">答錯</b>　') + q.why;
+    rv.style.display = '';
+    $('#qself').querySelectorAll('button').forEach(b => b.disabled = true);
+    $('#qnext').style.display = '';
+    $('#qnext').textContent = qi + 1 < quiz.length ? '下一題 →' : '看結果 →';
+  }
+
+  $('#selfright').onclick = () => finishQ(true, quiz[qi]);
+  $('#selfwrong').onclick = () => finishQ(false, quiz[qi]);
+  $('#qnext').onclick = () => {
+    qi++;
+    if (qi < quiz.length) showQ();
+    else endQuiz();
+  };
+
+  function endQuiz() {
+    $('#quizrun').style.display = 'none';
+    $('#quizdone').style.display = '';
+    $('#finalscore').textContent = score;
+    const hist = S.get('quizhist', []); hist.push(score); S.set('quizhist', hist.slice(-30));
+    const msg = score >= 9 ? '這批已經熟了，換一輪或去刷題。'
+      : score >= 7 ? '不錯。把下面錯的補起來就穩了。'
+        : score >= 4 ? '中間地帶——錯的那幾題今天再看一次。'
+          : '這些都還沒進腦子。先去「翻卡」把陷阱過一遍再回來。';
+    $('#finalmsg').textContent = msg + '（最佳連對 ' + maxStreak + '）';
+    const wl = $('#wronglist'); wl.innerHTML = '';
+    if (wrong.length) {
+      wl.appendChild(el('div', 'eyebrow', '錯的這幾題'));
+      wrong.forEach(w => {
+        const d = el('div', 'wrongitem');
+        d.appendChild(el('div', 'wq', w.sub ? w.sub : w.type));
+        const a = el('div', 'wa'); a.innerHTML = w.why; d.appendChild(a);
+        wl.appendChild(d);
+      });
+    }
+    renderStats();
+  }
+
+  $('#startquiz').onclick = startQuiz;
+  $('#againquiz').onclick = startQuiz;
+
+  function renderQStats() {
+    const hist = S.get('quizhist', []);
+    const box = $('#qstats'); box.innerHTML = '';
+    if (!hist.length) { box.appendChild(el('div', 'lead', '還沒抽考過。')); return; }
+    const avg = (hist.reduce((a, b) => a + b, 0) / hist.length).toFixed(1);
+    [['已抽考', hist.length + ' 輪'], ['平均', avg + ' / 10'], ['最佳', Math.max(...hist) + ' / 10']]
+      .forEach(([k, v]) => {
+        const d = el('div', 'qstat');
+        d.appendChild(el('div', 'eyebrow', k));
+        d.appendChild(el('div', 'statval', v));
+        box.appendChild(d);
+      });
   }
 
   /* ── 技巧 ─────────────────────────────────────────────── */
@@ -190,7 +409,6 @@
       h.appendChild(el('h3', null, s.name));
       h.appendChild(el('span', 'lv lv' + s.lv, s.lv === 1 ? '必修' : s.lv === 2 ? '選修' : '超綱'));
       d.appendChild(h);
-
       const b = el('div', 'skillbody');
       const field = (lbl, txt, cls) => {
         const f = el('div', 'field');
@@ -200,23 +418,18 @@
       };
       b.appendChild(field('何時用', s.when));
       b.appendChild(field('想法', s.idea, 'idea'));
-
       const sn = el('div', 'snip');
       const sh = el('div', 'sniphead');
       sh.appendChild(el('h3', null, s.name + '.cpp'));
       const cp = el('button', 'btn sm', '複製');
-      cp.onclick = () => {
-        navigator.clipboard?.writeText(s.code).then(() => {
-          cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
-        }).catch(() => { });
-      };
-      sh.appendChild(cp);
-      sn.appendChild(sh);
+      cp.onclick = () => navigator.clipboard?.writeText(s.code).then(() => {
+        cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
+      }).catch(() => { });
+      sh.appendChild(cp); sn.appendChild(sh);
       const pre = el('pre'); const code = el('code', 'blk');
       code.innerHTML = window.highlightCpp(s.code);
       pre.appendChild(code); sn.appendChild(pre);
       b.appendChild(sn);
-
       if (s.probs && s.probs.length) {
         const f = el('div', 'field');
         f.appendChild(el('div', 'lbl', '練這幾題'));
@@ -227,50 +440,13 @@
           a.target = '_blank'; a.rel = 'noopener';
           links.appendChild(a);
         });
-        f.appendChild(links);
-        b.appendChild(f);
+        f.appendChild(links); b.appendChild(f);
       }
-      d.appendChild(b);
-      box.appendChild(d);
+      d.appendChild(b); box.appendChild(d);
     });
   }
 
-  /* ── 速查 ─────────────────────────────────────────────── */
-  const BUDGET = [
-    ['n ≤ 11', 'O(n!)', '全排列暴力 · next_permutation'],
-    ['n ≤ 22', 'O(2ⁿ)', '子集列舉 · bitmask'],
-    ['n ≤ 100', 'O(n³)', '三層迴圈 · Floyd · 區間 DP'],
-    ['n ≤ 1000', 'O(n²·log n)', '雙層迴圈裡再帶二分'],
-    ['n ≤ 5000', 'O(n²)', '雙層迴圈 · LCS · O(n²) 的 LIS'],
-    ['n ≤ 10⁵', 'O(n log n)', '排序 · set/map · 二分'],
-    ['n ≤ 10⁶', 'O(n)', '掃一遍 · 前綴和 · 雙指針 · 質數篩'],
-    ['n ≥ 10⁷', 'O(log n) / O(1)', '快速冪 · 純數學公式']
-  ];
-  const APIS = [
-    ['vector', [['v.push_back(x)', 'O(1)*', '均攤 O(1)'], ['v[i]', 'O(1)', ''],
-    ['v.insert(v.begin()+i, x)', 'O(n)', '能避免就避免'], ['sort(v.begin(), v.end())', 'O(n log n)', ''],
-    ['v.erase(unique(...), v.end())', 'O(n)', '要先 sort · 去重／離散化'],
-    ['lower_bound(...) - v.begin()', 'O(log n)', '要先 sort · 第一個 ≥ x'],
-    ['v.assign(n, 0)', 'O(n)', '多測資之間用這個重置']]],
-    ['string', [['s.substr(pos, len)', 'O(len)', '第二參數是長度'], ['s.find("abc")', 'O(nm)', '找不到回 npos'],
-    ['reverse(s.begin(), s.end())', 'O(n)', ''], ['stoi(s) / to_string(x)', 'O(n)', '']]],
-    ['set / map', [['s.insert(x) / mp[k]=v', 'O(log n)', ''], ['s.count(x) / s.find(x)', 'O(log n)', '查詢用這個'],
-    ['s.lower_bound(x)', 'O(log n)', '成員函式版'],
-    ['std::lower_bound(s.begin(),…)', 'O(n)', '退化！絕不要對 set 用'],
-    ['*s.begin() / *s.rbegin()', 'O(1)', '最小 / 最大'],
-    ['ms.erase(ms.find(x))', 'O(log n)', 'multiset 只刪一個'],
-    ['ms.erase(x)', 'O(log n + k)', '刪光所有等於 x 的']]],
-    ['unordered_map / set', [['um[k] / um.count(k)', 'O(1)*', '平均 O(1)、最壞 O(n)'],
-    ['有序遍歷 · lower_bound', '—', '不支援']]],
-    ['queue / stack / deque', [['q.push / q.front / q.pop', 'O(1)', ''],
-    ['st.top() 再 st.pop()', 'O(1)', 'pop 不回傳值'],
-    ['dq.push_front / push_back', 'O(1)', ''], ['dq[i]', 'O(1)', 'stack/queue 沒有']]],
-    ['priority_queue', [['pq.push(x) / pq.pop()', 'O(log n)', ''], ['pq.top()', 'O(1)', '預設大根堆'],
-    ['修改／刪除中間元素', '—', '不支援，用懶惰刪除']]],
-    ['演算法', [['max_element / count / find', 'O(n)', '線性搜尋'], ['binary_search', 'O(log n)', '要先 sort'],
-    ['accumulate(b, e, 0LL)', 'O(n)', '初值一定寫 0LL'], ['next_permutation', 'O(n)', '要先 sort'],
-    ['nth_element', 'O(n)', '只把第 k 小放到位'], ['__gcd(a, b)', 'O(log n)', 'GCC 內建']]]
-  ];
+  /* ── STL / 速查 ───────────────────────────────────────── */
   const PICK = [['一般序列、不確定用什麼', 'vector'], ['只在尾端進出', 'vector / stack'],
   ['先進先出（BFS）', 'queue'], ['兩端都要進出', 'deque'], ['每次取最小 / 最大', 'priority_queue'],
   ['判斷有沒有出現過，要有序', 'set'], ['統計次數，key 是字串', 'map<string,int>'],
@@ -298,27 +474,12 @@
       tr.appendChild(el('td', 'n3', how));
       b.appendChild(tr);
     });
-    const box = $('#apis'); box.innerHTML = '';
-    APIS.forEach(([name, ops]) => {
-      const g = el('div');
-      g.appendChild(el('div', 'eyebrow', name));
-      const tw = el('div', 'tw'); const t = el('table', 'apitbl');
-      ops.forEach(([op, cx, ds]) => {
-        const tr = el('tr');
-        tr.appendChild(el('td', 'op', op));
-        tr.appendChild(el('td', 'cx' + (cx === 'O(n)' || cx === 'O(nm)' || cx === '—' ? ' slow' : ''), cx));
-        tr.appendChild(el('td', 'ds', ds));
-        t.appendChild(tr);
-      });
-      tw.appendChild(t); g.appendChild(tw); box.appendChild(g);
-    });
     const p = $('#pick'); p.innerHTML = '';
     PICK.forEach(([need, use]) => {
       const tr = el('tr');
       tr.appendChild(el('td', null, need));
-      const u = el('td', 'op'); u.style.color = 'var(--gold-hi)'; u.style.fontWeight = '600';
-      u.style.fontFamily = 'var(--mono)'; u.textContent = use;
-      tr.appendChild(u); p.appendChild(tr);
+      const u = el('td', 'usecol', use); tr.appendChild(u);
+      p.appendChild(tr);
     });
     const l = $('#lang'); l.innerHTML = '';
     LANG.forEach(([f, v, note]) => {
@@ -336,34 +497,64 @@
       tr.appendChild(el('td', 'ds', d));
       li.appendChild(tr);
     });
+
+    // STL cheatsheet
+    const box = $('#stl'); box.innerHTML = '';
+    STL.forEach((c, i) => {
+      const d = el('details', 'skill'); if (i === 0) d.open = true;
+      const h = el('summary', 'skillhead');
+      const t = el('div', null); t.style.flex = '1';
+      const nm = el('h3', null, c.name); nm.style.fontFamily = 'var(--mono)';
+      t.appendChild(nm);
+      t.appendChild(el('div', 'psub', c.tag));
+      h.appendChild(t);
+      d.appendChild(h);
+      const b2 = el('div', 'skillbody');
+      if (c.note) b2.appendChild(el('div', 'lead', c.note));
+      c.g.forEach(([grp, rows]) => {
+        const g = el('div');
+        g.appendChild(el('div', 'lbl', grp));
+        const tw = el('div', 'tw'); const tb = el('table', 'apitbl');
+        // 標紅的是「有代價或有陷阱」的操作：線性以上、或根本不支援
+        const isSlow = cx => cx === '—' || cx === 'O(n)' || cx === 'O(nm)' || cx.startsWith('O(n²');
+        rows.forEach(([op, cx, ds]) => {
+          const tr = el('tr');
+          tr.appendChild(el('td', 'op', op));
+          tr.appendChild(el('td', 'cx' + (isSlow(cx) ? ' slow' : ''), cx));
+          const dd = el('td', 'ds'); dd.innerHTML = ds; tr.appendChild(dd);
+          tb.appendChild(tr);
+        });
+        tw.appendChild(tb); g.appendChild(tw); b2.appendChild(g);
+      });
+      if (c.trap) {
+        const w = el('div', 'warn'); w.innerHTML = '<b>陷阱：</b>' + c.trap;
+        b2.appendChild(w);
+      }
+      d.appendChild(b2); box.appendChild(d);
+    });
   }
 
   /* ── 考古 ─────────────────────────────────────────────── */
   function renderPast() {
-    // 高頻重複題：跨場次出現 ≥2 次，或同時落在一星選集與歷屆中
     const freq = {};
     EXAMS.forEach(e => e.ps.forEach(p => { freq[p.uva] = (freq[p.uva] || 0) + 1; }));
     const s1 = new Set(P1.map(p => p.uva));
     const titleOf = {};
     EXAMS.forEach(e => e.ps.forEach(p => titleOf[p.uva] = p.title));
-    const hot = Object.keys(freq)
-      .filter(u => freq[u] >= 2 || s1.has(+u))
+    const hot = Object.keys(freq).filter(u => freq[u] >= 2 || s1.has(+u))
       .sort((a, b) => freq[b] - freq[a] || a - b);
     const hots = $('#hots'); hots.innerHTML = '';
     hot.forEach(u => {
       const a = el('a', 'tag hot', u + ' ' + titleOf[u] + (freq[u] >= 2 ? ' ×' + freq[u] : ''));
       a.href = uvaURL(u); a.target = '_blank'; a.rel = 'noopener';
-      a.style.textDecoration = 'none';
       hots.appendChild(a);
     });
-
     const box = $('#exams'); box.innerHTML = '';
     EXAMS.forEach((e, i) => {
       const d = el('details', 'exam'); if (i === 0) d.open = true;
       const sm = el('summary');
       sm.appendChild(el('span', 'dt', e.date));
-      const easy = e.ps.filter(p => p.st === 1).length;
-      sm.appendChild(el('span', 'mix', '☆ × ' + easy));
+      sm.appendChild(el('span', 'mix', '☆ × ' + e.ps.filter(p => p.st === 1).length));
       d.appendChild(sm);
       const tw = el('div', 'tw'); const t = el('table');
       const tr0 = el('tr');
@@ -373,8 +564,9 @@
         const r = el('tr');
         r.appendChild(el('td', 'n', String(j + 1)));
         const td = el('td');
-        const a = el('a', 'pname', p.title);
+        const a = el('a', 'pcode', p.title);
         a.href = linkFor(p); a.target = '_blank'; a.rel = 'noopener';
+        a.style.fontFamily = 'var(--sans)';
         td.appendChild(a); r.appendChild(td);
         r.appendChild(el('td', 'n', p.uva + (p.zj ? ' / ' + p.zj : '')));
         r.appendChild(el('td', 'stars', p.st ? '☆'.repeat(p.st) : '—'));
@@ -401,25 +593,37 @@
     const known = S.get('known', []); known.push(deck[cur]); S.set('known', known);
     deck.splice(cur, 1);
     if (cur >= deck.length) cur = 0;
-    showCard();
+    showCard(); renderStats();
   };
   $('#shuffle').onclick = buildDeck;
-  $('#resetcards').onclick = () => { S.set('known', S.get('known', []).filter(i => !inMode(i))); buildDeck(); };
-  $('#deckseg').querySelectorAll('button').forEach(b => {
-    if (b.dataset.d === mode) { $('#deckseg').querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); }
-    b.onclick = () => {
-      $('#deckseg').querySelectorAll('button').forEach(x => x.classList.remove('on'));
-      b.classList.add('on'); mode = b.dataset.d; S.set('deckmode', mode); buildDeck();
-    };
-  });
+  $('#resetcards').onclick = () => { S.set('known', S.get('known', []).filter(i => !inMode(i))); buildDeck(); renderStats(); };
 
+  const segBind = (sel, key, onPick) => {
+    const btns = $(sel).querySelectorAll('button');
+    btns.forEach(b => {
+      b.onclick = () => {
+        btns.forEach(x => x.classList.remove('on'));
+        b.classList.add('on'); onPick(b);
+      };
+    });
+    return btns;
+  };
+  segBind('#deckseg', null, b => { dmode = b.dataset.d; S.set('deckmode', dmode); buildDeck(); });
+  $('#deckseg').querySelectorAll('button').forEach(b => {
+    if (b.dataset.d === dmode) { $('#deckseg').querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); }
+  });
+  segBind('#starseg', null, b => { star = +b.dataset.s; S.set('star', star); renderList(); });
   $('#starseg').querySelectorAll('button').forEach(b => {
     if (+b.dataset.s === star) { $('#starseg').querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); }
-    b.onclick = () => {
-      $('#starseg').querySelectorAll('button').forEach(x => x.classList.remove('on'));
-      b.classList.add('on'); star = +b.dataset.s; S.set('star', star); renderList();
-    };
   });
+  segBind('#modeseg', null, b => {
+    const quizOn = b.dataset.m === 'quiz';
+    $('#cardmode').style.display = quizOn ? 'none' : '';
+    $('#quizmode').style.display = quizOn ? '' : 'none';
+    $('#dkc').style.display = quizOn ? 'none' : '';
+    if (quizOn) { renderQStats(); $('#quizintro').style.display = ''; $('#quizrun').style.display = 'none'; $('#quizdone').style.display = 'none'; }
+  });
+
   let qt;
   $('#q').oninput = e => { clearTimeout(qt); qt = setTimeout(() => { query = e.target.value; renderList(); }, 140); };
 
@@ -452,7 +656,7 @@
   /* ── init ─────────────────────────────────────────────── */
   getStart();
   renderBoard(); renderCountdown(); renderDay(); buildDeck();
-  renderList(); renderSkills(); renderRef(); renderPast();
+  renderList(); renderSkills(); renderRef(); renderPast(); renderQStats();
 
   const last = S.get('tab', 'today');
   if (last !== 'today') {
@@ -461,8 +665,6 @@
   }
 
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => { });
-    });
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
   }
 })();
