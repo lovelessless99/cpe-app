@@ -7,7 +7,8 @@
     typeof SOL2 !== 'undefined' ? SOL2 : {},
     typeof SOL3 !== 'undefined' ? SOL3 : {},
     typeof SOL4 !== 'undefined' ? SOL4 : {},
-    typeof SOL5 !== 'undefined' ? SOL5 : {});
+    typeof SOL5 !== 'undefined' ? SOL5 : {},
+    typeof SOL6 !== 'undefined' ? SOL6 : {});
   const stat = u => (typeof UST !== 'undefined' && UST[u]) || null;
 
   const S = {
@@ -212,7 +213,8 @@
       const io = [
         typeof IO !== 'undefined' ? IO : null,
         typeof IO2 !== 'undefined' ? IO2 : null,
-        typeof IO3 !== 'undefined' ? IO3 : null
+        typeof IO3 !== 'undefined' ? IO3 : null,
+        typeof IO4 !== 'undefined' ? IO4 : null
       ].reduce((r, m) => r || (m && m[p.uva]) || null, null);
       if (io) {
         b.appendChild(field('輸入', io.i));
@@ -835,7 +837,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v13';                    // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v14';                    // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
