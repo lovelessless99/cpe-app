@@ -266,9 +266,10 @@
   function makeQuiz() {
     const items = [];
     // A. 技巧配對：給題意，選正確技巧
+    // 一輪固定 10 題：技巧配對 3 + 效率預算 2 + STL 用法 3 + 陷阱回想 2
     const tagged = P1.filter(p => p.tag && SOL[p.uva]);
     const allTags = [...new Set(P1.map(p => p.tag))];
-    shuffle(tagged.slice()).slice(0, 4).forEach(p => {
+    shuffle(tagged.slice()).slice(0, 3).forEach(p => {
       const opts = shuffle([p.tag, ...shuffle(allTags.filter(t => t !== p.tag)).slice(0, 3)]);
       items.push({
         type: '技巧配對', ask: SOL[p.uva].q,
@@ -278,15 +279,22 @@
       });
     });
     // B. 效率預算：給 n，選複雜度
-    shuffle(BUDGET.slice()).slice(0, 3).forEach(b => {
+    shuffle(BUDGET.slice()).slice(0, 2).forEach(b => {
       const opts = shuffle([b[1], ...shuffle(BUDGET.filter(x => x[1] !== b[1])).slice(0, 3).map(x => x[1])]);
       items.push({
         type: '效率預算', ask: '題目的 n 範圍是 ' + b[0] + '，該寫什麼複雜度？',
         sub: '判題機每秒約 10⁸ 次運算', opts, ans: b[1], why: b[2]
       });
     });
-    // C. 陷阱回想：自評
-    shuffle(CARDS.map((c, i) => i)).slice(0, 3).forEach(i => {
+    // C. STL 用法：給任務選正確寫法，干擾選項是真的有人會寫錯的版本
+    shuffle(STLQ.slice()).slice(0, 3).forEach(s => {
+      items.push({
+        type: 'STL 用法', ask: s.task, sub: '選出正確的寫法',
+        opts: shuffle([s.ans, ...s.bad]), ans: s.ans, why: s.why, code: true
+      });
+    });
+    // D. 陷阱回想：自評
+    shuffle(CARDS.map((c, i) => i)).slice(0, 2).forEach(i => {
       items.push({ type: '陷阱回想 · 自評', ask: CARDS[i][1], sub: CARDS[i][0], self: true, why: CARDS[i][2] });
     });
     return shuffle(items);
@@ -324,7 +332,8 @@
     } else {
       $('#qself').style.display = 'none';
       q.opts.forEach(o => {
-        const b = el('button', 'opt', o);
+        const b = el('button', 'opt' + (q.code ? ' code' : ''), o);
+        b.dataset.val = o;
         b.onclick = () => answer(o === q.ans, b, q);
         opts.appendChild(b);
       });
@@ -334,7 +343,7 @@
   function answer(ok, btn, q) {
     $('#qopts').querySelectorAll('.opt').forEach(b => {
       b.disabled = true;
-      if (b.textContent === q.ans) b.classList.add('right');
+      if (b.dataset.val === q.ans) b.classList.add('right');
     });
     if (btn && !ok) btn.classList.add('wrong');
     finishQ(ok, q);
@@ -506,7 +515,8 @@
       const t = el('div', null); t.style.flex = '1';
       const nm = el('h3', null, c.name); nm.style.fontFamily = 'var(--mono)';
       t.appendChild(nm);
-      t.appendChild(el('div', 'psub', c.tag));
+      const tg = el('div', 'psub'); tg.innerHTML = c.tag;   // tag 內含跳脫過的 &lt;&gt;
+      t.appendChild(tg);
       h.appendChild(t);
       d.appendChild(h);
       const b2 = el('div', 'skillbody');
@@ -519,16 +529,35 @@
         const isSlow = cx => cx === '—' || cx === 'O(n)' || cx === 'O(nm)' || cx.startsWith('O(n²');
         rows.forEach(([op, cx, ds]) => {
           const tr = el('tr');
-          tr.appendChild(el('td', 'op', op));
-          tr.appendChild(el('td', 'cx' + (isSlow(cx) ? ' slow' : ''), cx));
+          // op / cx / ds 都含跳脫過的 &lt;&gt; 與 <b>，一律走 innerHTML
+          const o = el('td', 'op'); o.innerHTML = op; tr.appendChild(o);
+          const c2 = el('td', 'cx' + (isSlow(cx) ? ' slow' : '')); c2.innerHTML = cx; tr.appendChild(c2);
           const dd = el('td', 'ds'); dd.innerHTML = ds; tr.appendChild(dd);
           tb.appendChild(tr);
         });
         tw.appendChild(tb); g.appendChild(tw); b2.appendChild(g);
       });
+      if (c.code) {
+        const sn = el('div', 'snip');
+        const sh = el('div', 'sniphead');
+        sh.appendChild(el('h3', null, c.name + ' 用法'));
+        const cp = el('button', 'btn sm', '複製');
+        cp.onclick = () => navigator.clipboard?.writeText(c.code).then(() => {
+          cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
+        }).catch(() => { });
+        sh.appendChild(cp); sn.appendChild(sh);
+        const pre = el('pre'); const code = el('code', 'blk');
+        code.innerHTML = window.highlightCpp(c.code);
+        pre.appendChild(code); sn.appendChild(pre);
+        b2.appendChild(sn);
+      }
       if (c.trap) {
         const w = el('div', 'warn'); w.innerHTML = '<b>陷阱：</b>' + c.trap;
         b2.appendChild(w);
+      }
+      if (c.mine) {
+        const m = el('div', 'mine'); m.innerHTML = '<span class="minelbl">我的建議</span>' + c.mine;
+        b2.appendChild(m);
       }
       d.appendChild(b2); box.appendChild(d);
     });

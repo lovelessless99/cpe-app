@@ -1,6 +1,6 @@
 /* Service Worker — app shell 快取，離線可用
    改版時把 VERSION 加一，舊快取會自動清掉 */
-const VERSION = 'cpe-v2';
+const VERSION = 'cpe-v3';
 const SHELL = [
   './',
   './index.html',
