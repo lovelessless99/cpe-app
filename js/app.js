@@ -726,7 +726,40 @@
     if (lb) lb.click();
   }
 
+  /* ── 版本顯示與更新偵測 ───────────────────────────────── */
+  const BUILD = 'cpe-v6';                     // 與 sw.js 的 VERSION 同步
+  const vEl = $('#buildver');
+  if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
+
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        // 有新版時提示重新載入，不要讓使用者看到半新半舊的狀態
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBar();
+          });
+        });
+        // 問 SW 它實際在跑哪個版本，跟頁面預期的比對
+        navigator.serviceWorker.addEventListener('message', ev => {
+          if (ev.data && ev.data.version && ev.data.version !== BUILD) showUpdateBar();
+        });
+        if (navigator.serviceWorker.controller)
+          navigator.serviceWorker.controller.postMessage('version');
+      }).catch(() => { });
+    });
+  }
+
+  function showUpdateBar() {
+    if ($('#updbar')) return;
+    const bar = el('div', 'updbar');
+    bar.id = 'updbar';
+    bar.appendChild(el('span', null, '有新版本'));
+    const b = el('button', 'btn sm pri', '重新載入');
+    b.onclick = () => location.reload();
+    bar.appendChild(b);
+    document.body.appendChild(bar);
   }
 })();

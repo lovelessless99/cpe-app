@@ -594,6 +594,20 @@ nav {
 /* 長程式碼在面板內仍要能滾到底 */
 .sheetbody pre, .skillbody pre { max-width: 100%; }
 
+/* ── 有新版時的提示條 ─────────────────────────────────── */
+.updbar {
+  position: fixed; left: 12px; right: 12px;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  z-index: 50; display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--gold);
+  border-radius: 11px; padding: 11px 13px; box-shadow: var(--shadow);
+  font-size: 13.5px; max-width: 676px; margin: 0 auto;
+  animation: rise .25s ease;
+}
+.updbar span { flex: 1; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .updbar { animation: none; } }
+
 /* ── 決策表的選擇欄 ───────────────────────────────────── */
 .usecol {
   font-family: var(--mono); color: var(--gold-hi); font-weight: 600;
