@@ -290,13 +290,30 @@
 
   <!-- ═══ 考古 ═══ -->
   <section class="view" id="v-past">
-    <div class="card flat" style="margin-bottom:12px">
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:4px">真實難度</div>
+      <h3 style="margin-bottom:6px">解出 k 題的考生比例</h3>
+      <p class="lead" style="margin-bottom:11px">
+        取自 <b>33 場官方考試</b>的考生答對率（把每場 7 題由高到低排序後取中位數）。
+        這是全體考生的實際表現，不是估計值。
+      </p>
+      <div class="tw"><table class="budget" id="ladder"></table></div>
+      <div class="warn" style="margin-top:11px">
+        <b>5 題大約是前 2%。</b>難度斷點在 3→4→5：每一階都是 2.6 到 3.3 倍。
+        <b>4 題（前 6%）是更穩的目標，而且準備路徑完全一樣</b>——差別只在最後那題要不要硬拚。
+      </div>
+    </div>
+
+    <div class="card flat">
       <div class="eyebrow" style="margin-bottom:6px">高頻重複題</div>
       <p class="lead" style="margin-bottom:10px">考過不只一次，或落在一星 49 題選集內。CPE 題目全取自 UVa 舊題且大量輪替。</p>
       <div id="hots" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>
-    <div id="exams"></div>
-    <div class="foot">2019–2025 共 14 場 · 每場 7 題 · 98 題題名全部驗證</div>
+    <div id="exams" style="margin-top:12px"></div>
+    <div class="foot">
+      2015–2025 共 39 場 · 273 題 · 題名全部經 uHunt 官方題庫驗證<br>
+      其中 33 場附 CPE 官方考生答對率（來自官方 test_data 的網頁存檔）
+    </div>
   </section>
 
 </main>
@@ -359,6 +376,7 @@
 <script src="js/solutions.js"></script>
 <script src="js/solutions2.js"></script>
 <script src="js/solutions3.js"></script>
+<script src="js/solutions4.js"></script>
 <script src="js/stats.js"></script>
 <script src="js/data.js"></script>
 <script src="js/stl.js"></script>

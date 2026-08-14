@@ -613,6 +613,15 @@ nav {
 /* 長程式碼在面板內仍要能滾到底 */
 .sheetbody pre, .skillbody pre { max-width: 100%; }
 
+/* 考古題的官方答對率欄位 */
+.passcell {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  white-space: nowrap; font-weight: 600; font-size: 12.5px;
+}
+.p-hi { color: var(--ac); }
+.p-mid { color: var(--gold-hi); }
+.p-lo { color: var(--ink-3); }
+
 /* 統計數字下方的說明 */
 .legend {
   font-size: 12px; line-height: 1.6; color: var(--ink-3);

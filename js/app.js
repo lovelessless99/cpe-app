@@ -3,7 +3,10 @@
   'use strict';
 
   // 兩份詳解合併：SOL = 一星 49 題，SOL2 = 歷屆考古題
-  const ALLSOL = Object.assign({}, SOL, typeof SOL2 !== 'undefined' ? SOL2 : {}, typeof SOL3 !== 'undefined' ? SOL3 : {});
+  const ALLSOL = Object.assign({}, SOL,
+    typeof SOL2 !== 'undefined' ? SOL2 : {},
+    typeof SOL3 !== 'undefined' ? SOL3 : {},
+    typeof SOL4 !== 'undefined' ? SOL4 : {});
   const stat = u => (typeof UST !== 'undefined' && UST[u]) || null;
 
   const S = {
@@ -618,6 +621,28 @@
 
   /* ── 考古 ─────────────────────────────────────────────── */
   function renderPast() {
+    // 難度階梯：每場 7 題答對率由高到低排序後，取各名次的中位數
+    const withPass = EXAMS.filter(e => e.ps[0].pass !== undefined);
+    const nth = [[], [], [], [], [], [], []];
+    withPass.forEach(e => {
+      e.ps.map(p => p.pass).sort((a, b) => b - a).forEach((v, i) => nth[i].push(v));
+    });
+    const med = a => { const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
+    const lad = $('#ladder'); lad.innerHTML = '';
+    nth.forEach((a, i) => {
+      const tr = el('tr');
+      tr.appendChild(el('td', 'n1', '解出 ' + (i + 1) + ' 題以上'));
+      const v = med(a);
+      const c = el('td', 'n2', v.toFixed(1) + '%');
+      if (i + 1 === 5) c.style.color = 'var(--wa)';
+      tr.appendChild(c);
+      tr.appendChild(el('td', 'n3',
+        i === 0 ? '幾乎人人拿得到' : i === 1 ? '寫得完就有' :
+        i === 2 ? '穩定的目標' : i === 3 ? '要下功夫' :
+        i === 4 ? '← 你的目標' : i === 5 ? '半年以上準備' : '極少數'));
+      lad.appendChild(tr);
+    });
+
     const freq = {};
     EXAMS.forEach(e => e.ps.forEach(p => { freq[p.uva] = (freq[p.uva] || 0) + 1; }));
     const s1 = new Set(P1.map(p => p.uva));
@@ -636,11 +661,14 @@
       const d = el('details', 'exam'); if (i === 0) d.open = true;
       const sm = el('summary');
       sm.appendChild(el('span', 'dt', e.date));
-      sm.appendChild(el('span', 'mix', '☆ × ' + e.ps.filter(p => p.st === 1).length));
+      const hasPass = e.ps[0].pass !== undefined;
+      sm.appendChild(el('span', 'mix', hasPass
+        ? '最高 ' + Math.max(...e.ps.map(p => p.pass)).toFixed(0) + '% 答對'
+        : '☆ × ' + e.ps.filter(p => p.st === 1).length));
       d.appendChild(sm);
       const tw = el('div', 'tw'); const t = el('table');
       const tr0 = el('tr');
-      ['#', '題目', '題號', '難度'].forEach(x => tr0.appendChild(el('th', null, x)));
+      ['#', '題目', '題號', hasPass ? '考生答對率' : '難度'].forEach(x => tr0.appendChild(el('th', null, x)));
       t.appendChild(tr0);
       e.ps.forEach((p, j) => {
         const r = el('tr');
@@ -649,9 +677,18 @@
         const a = el('a', 'pcode', p.title);
         a.href = linkFor(p); a.target = '_blank'; a.rel = 'noopener';
         a.style.fontFamily = 'var(--sans)';
-        td.appendChild(a); r.appendChild(td);
+        td.appendChild(a);
+        if (ALLSOL[p.uva]) td.appendChild(el('span', 'badge hasol', ' 詳解'));
+        r.appendChild(td);
         r.appendChild(el('td', 'n', p.uva + (p.zj ? ' / ' + p.zj : '')));
-        r.appendChild(el('td', 'stars', p.st ? '☆'.repeat(p.st) : '—'));
+        // 有官方答對率就顯示它，否則退回星等標註
+        if (p.pass !== undefined) {
+          const c = el('td', 'passcell', p.pass.toFixed(1) + '%');
+          c.classList.add(p.pass >= 30 ? 'p-hi' : p.pass >= 8 ? 'p-mid' : 'p-lo');
+          r.appendChild(c);
+        } else {
+          r.appendChild(el('td', 'stars', p.st ? '☆'.repeat(p.st) : '—'));
+        }
         t.appendChild(r);
       });
       tw.appendChild(t); d.appendChild(tw); box.appendChild(d);
@@ -747,7 +784,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v7';                     // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v8';                     // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
