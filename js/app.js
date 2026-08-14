@@ -2,6 +2,10 @@
 (function () {
   'use strict';
 
+  // 兩份詳解合併：SOL = 一星 49 題，SOL2 = 歷屆考古題
+  const ALLSOL = Object.assign({}, SOL, typeof SOL2 !== 'undefined' ? SOL2 : {});
+  const stat = u => (typeof UST !== 'undefined' && UST[u]) || null;
+
   const S = {
     get(k, d) { try { const v = localStorage.getItem('cpe.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('cpe.' + k, JSON.stringify(v)); } catch (e) { } }
@@ -16,6 +20,7 @@
   const parseISO = s => new Date(s + 'T00:00:00');
   const daysBetween = (a, b) => Math.round((b - a) / 864e5);
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const fmtAC = n => n >= 10000 ? (n / 1000).toFixed(0) + 'k' : n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
 
   /* ── 設定與倒數 ───────────────────────────────────────── */
   function defaultExam() {
@@ -121,14 +126,38 @@
 
   /* ── 詳解面板 ─────────────────────────────────────────── */
   function openSheet(p) {
-    const s = SOL[p.uva];
+    const s = ALLSOL[p.uva];
     $('#shmeta').textContent = 'UVa ' + p.uva + (p.zj ? ' · ' + p.zj : '') + (p.tag ? ' · ' + p.tag : '');
     $('#shtitle').textContent = p.title;
     const b = $('#shbody'); b.innerHTML = '';
 
+    // 官方統計：難度與格式陷阱指標
+    const st = stat(p.uva);
+    if (st) {
+      const g = el('div', 'statrow');
+      const mk = (lbl, val, cls) => {
+        const d = el('div', 'ministat' + (cls ? ' ' + cls : ''));
+        d.appendChild(el('div', 'eyebrow', lbl));
+        d.appendChild(el('div', 'statval', val));
+        return d;
+      };
+      g.appendChild(mk('全球 AC 人數', fmtAC(st.d)));
+      g.appendChild(mk('AC 率', st.r + '%'));
+      g.appendChild(mk('WA / AC', st.w.toFixed(1), st.w >= 1.6 ? 'bad' : ''));
+      b.appendChild(g);
+      if (st.w >= 1.6) {
+        const w = el('div', 'warn');
+        w.innerHTML = '<b>格式陷阱題。</b>每 1 次 AC 就伴隨 ' + st.w.toFixed(1) +
+          ' 次 WA——遠高於平均。這種題輸的通常不是演算法，是輸出格式。<b>送出前務必把樣例貼進去逐字比對</b>。';
+        b.appendChild(w);
+      }
+    }
+
     if (!s) {
       const d = el('div', 'card flat');
-      d.appendChild(el('div', 'lead', '這一題還沒有詳解。目前完整詳解涵蓋一顆星 49 題——那是每場考試必中 1 題、也是你要穩拿的前 3 題。'));
+      d.appendChild(el('div', 'lead',
+        '這一題還沒有詳解。目前詳解涵蓋：一顆星 49 題全部（每場必中 1 題），' +
+        '加上歷屆考古題中我有把握的部分。其餘題目我沒有可靠掌握，硬寫等於編造——你要拿來背的東西不能是編的。'));
       b.appendChild(d);
     } else {
       const field = (lbl, html, cls) => {
@@ -203,11 +232,15 @@
       };
       row.appendChild(btn);
       const m = el('div', 'pmeta');
-      const nm = el('div', 'pname', p.title);
-      m.appendChild(nm);
-      m.appendChild(el('span', 'psub', 'UVa ' + p.uva + (p.zj ? ' · ' + p.zj : '') + (p.tag ? ' · ' + p.tag : '')));
+      m.appendChild(el('div', 'pname', p.title));
+      const st = stat(p.uva);
+      let sub = 'UVa ' + p.uva + (p.zj ? ' · ' + p.zj : '') + (p.tag ? ' · ' + p.tag : '');
+      if (st) sub += ' · ' + fmtAC(st.d) + ' 人 AC';
+      m.appendChild(el('span', 'psub', sub));
       row.appendChild(m);
-      if (SOL[p.uva]) row.appendChild(el('span', 'hasol', '詳解'));
+      // WA/AC 比高 = 輸出格式陷阱題，值得先警告
+      if (st && st.w >= 1.6) row.appendChild(el('span', 'badge trapb', '格式'));
+      if (ALLSOL[p.uva]) row.appendChild(el('span', 'badge hasol', '詳解'));
       row.tabIndex = 0;
       row.onclick = () => openSheet(p);
       row.onkeydown = e => { if (e.key === 'Enter') openSheet(p); };
@@ -267,15 +300,15 @@
     const items = [];
     // A. 技巧配對：給題意，選正確技巧
     // 一輪固定 10 題：技巧配對 3 + 效率預算 2 + STL 用法 3 + 陷阱回想 2
-    const tagged = P1.filter(p => p.tag && SOL[p.uva]);
+    const tagged = P1.filter(p => p.tag && ALLSOL[p.uva]);
     const allTags = [...new Set(P1.map(p => p.tag))];
     shuffle(tagged.slice()).slice(0, 3).forEach(p => {
       const opts = shuffle([p.tag, ...shuffle(allTags.filter(t => t !== p.tag)).slice(0, 3)]);
       items.push({
-        type: '技巧配對', ask: SOL[p.uva].q,
+        type: '技巧配對', ask: ALLSOL[p.uva].q,
         sub: 'UVa ' + p.uva + ' — ' + p.title,
         opts, ans: p.tag,
-        why: SOL[p.uva].h
+        why: ALLSOL[p.uva].h
       });
     });
     // B. 效率預算：給 n，選複雜度

@@ -460,11 +460,28 @@ nav {
 .p:hover { background: var(--surface-2); }
 .pname { font-size: 14px; line-height: 1.4; display: block; color: var(--ink); }
 .p.ok .pname { color: var(--ink-3); text-decoration: line-through; }
-.hasol {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; flex: 0 0 auto;
-  padding: 2px 6px; border-radius: 4px; background: var(--gold-soft);
-  color: var(--gold-hi); border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+.badge {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; flex: 0 0 auto;
+  padding: 2px 6px; border-radius: 4px; white-space: nowrap;
 }
+.hasol {
+  background: var(--gold-soft); color: var(--gold-hi);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+.trapb {
+  background: var(--wa-soft); color: var(--wa);
+  border: 1px solid color-mix(in srgb, var(--wa) 30%, transparent);
+}
+
+/* 詳解面板頂端的官方統計 */
+.statrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.ministat {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 11px;
+}
+.ministat.bad { border-color: color-mix(in srgb, var(--wa) 45%, transparent); background: var(--wa-soft); }
+.ministat.bad .statval { color: var(--wa); }
+.ministat .statval { font-size: 17px; }
 
 /* ── 詳解面板 ─────────────────────────────────────────── */
 .sheet { position: fixed; inset: 0; z-index: 60; }
