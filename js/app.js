@@ -206,6 +206,33 @@
         return f;
       };
       b.appendChild(field('題意', s.q));
+
+      // 輸入輸出格式與範例：讓你不用點連結就能開始寫
+      const io = (typeof IO !== 'undefined') ? IO[p.uva] : null;
+      if (io) {
+        b.appendChild(field('輸入', io.i));
+        b.appendChild(field('輸出', io.o));
+        if (io.s) {
+          const g = el('div', 'samples');
+          const mk = (lbl, txt) => {
+            const d = el('div', 'sample');
+            const h = el('div', 'lbl');
+            h.appendChild(el('span', null, lbl));
+            const cp = el('button', 'btn sm', '複製');
+            cp.onclick = () => navigator.clipboard?.writeText(txt).then(() => {
+              cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1200);
+            }).catch(() => { });
+            h.appendChild(cp);
+            d.appendChild(h);
+            d.appendChild(el('pre', 'io', txt));
+            return d;
+          };
+          g.appendChild(mk('範例輸入', io.s[0]));
+          g.appendChild(mk('範例輸出', io.s[1]));
+          b.appendChild(g);
+        }
+      }
+
       b.appendChild(field('解法', s.h, 'idea'));
       b.appendChild(field('陷阱', s.t, 'trap'));
 
@@ -220,14 +247,15 @@
 
     const sheet = $('#sheet');
     sheet.hidden = false;
+    sheet.scrollTop = 0;                       // 每次開啟從頂端看起
     requestAnimationFrame(() => sheet.classList.add('open'));
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';   // 背景不要跟著捲
   }
   function closeSheet() {
     const sheet = $('#sheet');
     sheet.classList.remove('open');
     document.body.style.overflow = '';
-    setTimeout(() => { sheet.hidden = true; }, 260);
+    setTimeout(() => { sheet.hidden = true; }, 220);
   }
   $('#sheetclose').onclick = closeSheet;
   $('#sheetbg').onclick = closeSheet;
@@ -798,7 +826,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v9';                     // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v10';                    // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 

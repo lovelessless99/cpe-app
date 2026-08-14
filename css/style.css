@@ -501,45 +501,44 @@ nav {
 .ministat .statval { font-size: 17px; }
 
 /* ── 詳解面板 ─────────────────────────────────────────── */
-.sheet { position: fixed; inset: 0; z-index: 60; }
-.sheetbg {
-  position: absolute; inset: 0; background: rgba(0, 0, 0, .55);
-  opacity: 0; transition: opacity .25s;
+/* 詳解採「全螢幕單一捲動容器」而不是巢狀捲動。
+   先前用「固定高度面板 + 內層 overflow-y:auto」，在行動瀏覽器上極脆弱
+   （網址列縮放、flex min-height、-webkit-overflow-scrolling 都可能讓內層失效）。
+   現在整個 .sheet 就是唯一的捲動容器，標題列用 sticky 固定——
+   這是瀏覽器最原生的捲動路徑，不會失效。 */
+.sheet {
+  position: fixed; inset: 0; z-index: 60;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: var(--ground);
+  opacity: 0; transition: opacity .2s ease;
 }
-.sheet.open .sheetbg { opacity: 1; }
+.sheet.open { opacity: 1; }
+.sheetbg { display: none; }                /* 全螢幕模式不需要背景遮罩 */
 .sheetin {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  height: 92vh; height: 92dvh;         /* dvh 避開行動瀏覽器網址列高度變動 */
-  max-height: 92vh; max-height: 92dvh;
-  display: flex; flex-direction: column;
-  background: var(--ground); border-top: 1px solid var(--line);
-  border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(0, 0, 0, .4);
-  transform: translateY(100%); transition: transform .28s cubic-bezier(.3, .1, .2, 1);
-  padding-bottom: env(safe-area-inset-bottom);
+  min-height: 100%;
+  transform: translateY(14px);
+  transition: transform .24s cubic-bezier(.3, .1, .2, 1);
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 .sheet.open .sheetin { transform: none; }
 .sheethead {
-  position: relative;                       /* 供下方的拖曳把手定位 */
-  display: flex; align-items: flex-start; gap: 10px; padding: 20px 16px 12px;
-  border-bottom: 1px solid var(--line); background: var(--surface);
-  border-radius: 18px 18px 0 0;
-}
-.sheethead::before {
-  content: ""; position: absolute; top: 7px; left: 50%; transform: translateX(-50%);
-  width: 34px; height: 4px; border-radius: 2px; background: var(--line);
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: saturate(1.6) blur(12px);
+  -webkit-backdrop-filter: saturate(1.6) blur(12px);
 }
 .sheetbody {
-  flex: 1 1 auto;
-  min-height: 0;            /* 關鍵：flex 子元素預設 min-height:auto 會被內容撐開，
-                               overflow 永遠不觸發，長程式碼就滾不動 */
-  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-  padding: 15px 16px 24px; display: flex; flex-direction: column; gap: 14px;
+  padding: 15px 16px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  max-width: 700px; margin: 0 auto;
 }
-.sheethead { flex: 0 0 auto; }
 .field .txt.trap { border-left: 2px solid var(--wa); padding-left: 11px; }
 @media (prefers-reduced-motion: reduce) {
-  .sheetin { transition: none; }
-  .sheetbg { transition: none; }
+  .sheetin, .sheet { transition: none; }
 }
 
 /* ── 抽考 ─────────────────────────────────────────────── */
@@ -612,6 +611,28 @@ nav {
 
 /* 長程式碼在面板內仍要能滾到底 */
 .sheetbody pre, .skillbody pre { max-width: 100%; }
+
+/* 範例輸入 / 輸出 */
+.samples { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) { .samples { grid-template-columns: 1fr; } }
+.sample {
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); overflow: hidden;
+}
+.sample .lbl {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; background: var(--surface-2);
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-3); font-weight: 700;
+  margin-bottom: 0;
+}
+.sample .lbl span { flex: 1; }
+pre.io {
+  margin: 0; padding: 10px 12px; background: var(--surface);
+  font-family: var(--mono); font-size: 12px; line-height: 1.55;
+  color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere;
+}
 
 /* 考古題的官方答對率欄位 */
 .passcell {
