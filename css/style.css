@@ -332,8 +332,25 @@ a.pname:hover { color: var(--gold-hi); }
 .snip { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; background: var(--surface); }
 .sniphead { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
 .sniphead h3 { flex: 1; font-size: 13px; font-family: var(--mono); letter-spacing: .02em; }
-pre { margin: 0; overflow-x: auto; padding: 13px; background: var(--surface); }
-code.blk { font-family: var(--mono); font-size: 12.5px; line-height: 1.65; white-space: pre; color: var(--ink); display: block; }
+pre {
+  margin: 0; padding: 13px; background: var(--surface);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;      /* 橫捲到底不要帶動整個面板 */
+  touch-action: pan-x pan-y;           /* 明確允許兩個方向的觸控捲動 */
+}
+code.blk {
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.65;
+  white-space: pre; color: var(--ink); display: block;
+}
+/* 自動換行模式：手機預設，免去橫向捲動 */
+pre.wrap { overflow-x: hidden; }
+pre.wrap code.blk {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  /* 換行後的續行往內縮，維持程式碼結構可讀 */
+  padding-left: 2.2em;
+  text-indent: -2.2em;
+}
 .snipnote { padding: 10px 12px; border-top: 1px solid var(--line-soft); font-size: 12.5px; color: var(--ink-2); background: var(--surface-2); }
 
 .t-kw { color: var(--t-kw); font-weight: 600; }
@@ -491,7 +508,9 @@ nav {
 }
 .sheet.open .sheetbg { opacity: 1; }
 .sheetin {
-  position: absolute; left: 0; right: 0; bottom: 0; max-height: 92vh;
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 92vh; height: 92dvh;         /* dvh 避開行動瀏覽器網址列高度變動 */
+  max-height: 92vh; max-height: 92dvh;
   display: flex; flex-direction: column;
   background: var(--ground); border-top: 1px solid var(--line);
   border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(0, 0, 0, .4);
@@ -593,6 +612,13 @@ nav {
 
 /* 長程式碼在面板內仍要能滾到底 */
 .sheetbody pre, .skillbody pre { max-width: 100%; }
+
+/* 統計數字下方的說明 */
+.legend {
+  font-size: 12px; line-height: 1.6; color: var(--ink-3);
+  padding: 0 2px;
+}
+.legend b { color: var(--ink-2); }
 
 /* ── 有新版時的提示條 ─────────────────────────────────── */
 .updbar {

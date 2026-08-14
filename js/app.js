@@ -22,6 +22,35 @@
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; };
   const fmtAC = n => n >= 10000 ? (n / 1000).toFixed(0) + 'k' : n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
 
+  /* 統一的程式碼區塊：語法上色 + 複製 + 自動換行切換
+     手機橫向捲程式碼很難用，所以預設自動換行；要看原始排版再切掉。 */
+  function codeBlock(title, src) {
+    const sn = el('div', 'snip');
+    const sh = el('div', 'sniphead');
+    sh.appendChild(el('h3', null, title));
+    const wrapOn = S.get('wrap', true);
+    const wb = el('button', 'btn sm', wrapOn ? '不換行' : '自動換行');
+    const cp = el('button', 'btn sm', '複製');
+    sh.appendChild(wb); sh.appendChild(cp);
+    sn.appendChild(sh);
+
+    const pre = el('pre', wrapOn ? 'wrap' : '');
+    const code = el('code', 'blk');
+    code.innerHTML = window.highlightCpp(src);
+    pre.appendChild(code); sn.appendChild(pre);
+
+    wb.onclick = () => {
+      const on = !pre.classList.contains('wrap');
+      pre.classList.toggle('wrap', on);
+      wb.textContent = on ? '不換行' : '自動換行';
+      S.set('wrap', on);
+    };
+    cp.onclick = () => navigator.clipboard?.writeText(src).then(() => {
+      cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
+    }).catch(() => { });
+    return sn;
+  }
+
   /* ── 設定與倒數 ───────────────────────────────────────── */
   function defaultExam() {
     const t = todayLocal();
@@ -141,14 +170,20 @@
         d.appendChild(el('div', 'statval', val));
         return d;
       };
-      g.appendChild(mk('全球 AC 人數', fmtAC(st.d)));
-      g.appendChild(mk('AC 率', st.r + '%'));
-      g.appendChild(mk('WA / AC', st.w.toFixed(1), st.w >= 1.6 ? 'bad' : ''));
+      g.appendChild(mk('多少人解出', fmtAC(st.d)));
+      g.appendChild(mk('通過率', st.r + '%'));
+      g.appendChild(mk('錯幾次才過', st.w.toFixed(1), st.w >= 1.6 ? 'bad' : ''));
       b.appendChild(g);
+      const lg = el('div', 'legend');
+      lg.innerHTML = '取自 UVa 官方統計。<b>解出人數</b>愈少代表愈難；' +
+        '<b>錯幾次才過</b>是「平均每通過 1 次要先被判錯幾次」（WA / AC 比）。' +
+        '判題代號的完整說明在「STL」分頁。';
+      b.appendChild(lg);
       if (st.w >= 1.6) {
         const w = el('div', 'warn');
-        w.innerHTML = '<b>格式陷阱題。</b>每 1 次 AC 就伴隨 ' + st.w.toFixed(1) +
-          ' 次 WA——遠高於平均。這種題輸的通常不是演算法，是輸出格式。<b>送出前務必把樣例貼進去逐字比對</b>。';
+        w.innerHTML = '<b>格式陷阱題。</b>平均每通過 1 次就先被判錯 ' + st.w.toFixed(1) +
+          ' 次，遠高於一般題目。這代表大家卡的<b>不是演算法，是輸出格式</b>——' +
+          '空格、換行、大小寫、單複數。<b>送出前務必把範例貼進去跑一次，逐字比對</b>。';
         b.appendChild(w);
       }
     }
@@ -171,19 +206,7 @@
       b.appendChild(field('解法', s.h, 'idea'));
       b.appendChild(field('陷阱', s.t, 'trap'));
 
-      const sn = el('div', 'snip');
-      const sh = el('div', 'sniphead');
-      sh.appendChild(el('h3', null, 'UVa ' + p.uva + '.cpp'));
-      const cp = el('button', 'btn sm', '複製');
-      cp.onclick = () => navigator.clipboard?.writeText(s.c).then(() => {
-        cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
-      }).catch(() => { });
-      sh.appendChild(cp);
-      sn.appendChild(sh);
-      const pre = el('pre'); const code = el('code', 'blk');
-      code.innerHTML = window.highlightCpp(s.c);
-      pre.appendChild(code); sn.appendChild(pre);
-      b.appendChild(sn);
+      b.appendChild(codeBlock('UVa ' + p.uva + '.cpp', s.c));
     }
 
     const links = el('div', 'plinks');
@@ -460,18 +483,7 @@
       };
       b.appendChild(field('何時用', s.when));
       b.appendChild(field('想法', s.idea, 'idea'));
-      const sn = el('div', 'snip');
-      const sh = el('div', 'sniphead');
-      sh.appendChild(el('h3', null, s.name + '.cpp'));
-      const cp = el('button', 'btn sm', '複製');
-      cp.onclick = () => navigator.clipboard?.writeText(s.code).then(() => {
-        cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
-      }).catch(() => { });
-      sh.appendChild(cp); sn.appendChild(sh);
-      const pre = el('pre'); const code = el('code', 'blk');
-      code.innerHTML = window.highlightCpp(s.code);
-      pre.appendChild(code); sn.appendChild(pre);
-      b.appendChild(sn);
+      b.appendChild(codeBlock(s.name + '.cpp', s.code));
       if (s.probs && s.probs.length) {
         const f = el('div', 'field');
         f.appendChild(el('div', 'lbl', '練這幾題'));
@@ -507,7 +519,28 @@
   ['兩個 10⁵ 相乘', '10¹⁰ → 溢位', '要 long long'],
   ['階乘', '13! 爆 int，21! 爆 long long', '大數或取模']];
 
+  /* 判題結果代號。看錯代號會往完全錯的方向修，所以這是基本功。 */
+  const VERDICT = [
+    ['AC', 'Accepted', '<b>通過</b>。這題解決了。'],
+    ['WA', 'Wrong Answer', '答案錯。程式有跑完，但輸出不對——<b>先查輸出格式與邊界</b>，不是急著改演算法。'],
+    ['TLE', 'Time Limit Exceeded', '<b>超時</b>。演算法太慢，要換複雜度更低的做法。改格式沒有用。'],
+    ['MLE', 'Memory Limit Exceeded', '記憶體超限。陣列開太大，或遞迴太深。'],
+    ['RE', 'Runtime Error', '執行時炸了：陣列越界、除以零、遞迴爆 stack。'],
+    ['PE', 'Presentation Error', '答案對但<b>排版</b>錯（多餘空格或換行）。有些系統直接判 WA。'],
+    ['CE', 'Compile Error', '根本沒編譯過。考場上先確認編譯器與 <code>bits/stdc++.h</code> 能不能用。']
+  ];
+
   function renderRef() {
+    const v = $('#verdict'); v.innerHTML = '';
+    VERDICT.forEach(([code, full, desc]) => {
+      const tr = el('tr');
+      const c1 = el('td', 'cx' + (code === 'AC' ? '' : ' slow'), code);
+      c1.style.fontWeight = '700'; tr.appendChild(c1);
+      tr.appendChild(el('td', 'op', full));
+      const d = el('td', 'ds'); d.innerHTML = desc; tr.appendChild(d);
+      v.appendChild(tr);
+    });
+
     const b = $('#budget'); b.innerHTML = '';
     BUDGET.forEach(([n, o, how]) => {
       const tr = el('tr');
@@ -570,20 +603,7 @@
         });
         tw.appendChild(tb); g.appendChild(tw); b2.appendChild(g);
       });
-      if (c.code) {
-        const sn = el('div', 'snip');
-        const sh = el('div', 'sniphead');
-        sh.appendChild(el('h3', null, c.name + ' 用法'));
-        const cp = el('button', 'btn sm', '複製');
-        cp.onclick = () => navigator.clipboard?.writeText(c.code).then(() => {
-          cp.textContent = '已複製'; setTimeout(() => cp.textContent = '複製', 1400);
-        }).catch(() => { });
-        sh.appendChild(cp); sn.appendChild(sh);
-        const pre = el('pre'); const code = el('code', 'blk');
-        code.innerHTML = window.highlightCpp(c.code);
-        pre.appendChild(code); sn.appendChild(pre);
-        b2.appendChild(sn);
-      }
+      if (c.code) b2.appendChild(codeBlock(c.name + ' 用法', c.code));
       if (c.trap) {
         const w = el('div', 'warn'); w.innerHTML = '<b>陷阱：</b>' + c.trap;
         b2.appendChild(w);
@@ -727,7 +747,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v6';                     // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v7';                     // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 

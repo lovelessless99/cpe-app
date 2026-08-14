@@ -40,7 +40,7 @@ const CPS = [
   [25, "5 題", "已達標，只做穩定它，不要開新主題"]
 ];
 
-const TRAPTAGS = ["I/O", "STL", "DP", "圖", "數學", "題目", "策略"];
+const TRAPTAGS = ["I/O", "STL", "DP", "圖", "數學", "題目", "策略", "判題"];
 
 const CARDS = [
   ["I/O", "多測資沒給筆數，怎麼讀？", "<code>while (cin >> a >> b)</code> 讀到 EOF。<b>忘記寫是 CPE 最大宗的 WA 來源</b>，跟演算法無關。"],
@@ -103,6 +103,10 @@ const CARDS = [
   ["API", "字串轉小寫一行寫法？", "<code>transform(s.begin(), s.end(), s.begin(), ::tolower);</code>"],
   ["API", "區間加值、最後才查詢，用什麼？", "<b>差分</b>：<code>d[l] += v; d[r+1] -= v;</code> 最後前綴和還原。"],
   ["API", "pair 的預設排序規則？", "<b>先比 first，再比 second</b>。多關鍵字排序直接用 <code>pair</code> 存，連 comparator 都不用寫。"],
+  ["判題", "送出後看到 <b>WA</b>，第一件事該做什麼？", "<b>檢查輸出格式，不是改演算法。</b><br>WA = Wrong Answer，程式有跑完但輸出不對。先看空格、換行、大小寫、單複數、測資間空行，再看邊界（n=0、單一元素）。"],
+  ["判題", "看到 <b>TLE</b> 該怎麼辦？", "TLE = Time Limit Exceeded，<b>演算法太慢</b>。<br>要換複雜度更低的做法——調輸出格式完全沒用。先看 n 的範圍推該用什麼複雜度。"],
+  ["判題", "<b>RE</b> 通常是什麼原因？", "Runtime Error：執行時炸了。<br>最常見三種：<b>陣列越界</b>、<b>除以零</b>、<b>遞迴太深爆 stack</b>（大網格用遞迴 DFS 就會這樣）。"],
+  ["判題", "<b>PE</b> 跟 WA 差在哪？", "PE = Presentation Error，<b>答案是對的但排版錯</b>（多餘空格或換行）。<br>有些系統寬容地判 PE，有些直接判 WA——所以不能賭，格式要一次寫對。"],
   ["語言", "考場能用 <code>#include &lt;bits/stdc++.h&gt;</code> 嗎？", "GCC 可以。但 <b>17:40–18:30 的練習時段一定要先編一次確認</b>，連同 <code>auto [a,b]</code> 一起測。"],
   ["語言", "<code>greater&lt;&gt;</code> 和 <code>greater&lt;int&gt;</code> 該寫哪個？", "<b>寫完整的 <code>greater&lt;int&gt;</code></b>。省略型別是 C++14 的透明比較器，少打幾個字不值得在考場賭編譯器版本。"]
 ];
