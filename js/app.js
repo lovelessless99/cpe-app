@@ -643,6 +643,20 @@
       lad.appendChild(tr);
     });
 
+    // 各題號位置的平均答對率：題號順序是不是難度順序？
+    const bypos = [[], [], [], [], [], [], []];
+    withPass.forEach(e => e.ps.forEach((p, i) => bypos[i].push(p.pass)));
+    const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const bp = $('#bypos'); bp.innerHTML = '';
+    bypos.forEach((a, i) => {
+      const tr = el('tr');
+      tr.appendChild(el('td', 'n1', '第 ' + (i + 1) + ' 題'));
+      tr.appendChild(el('td', 'n2', avg(a).toFixed(1) + '%'));
+      tr.appendChild(el('td', 'n3',
+        i < 2 ? '穩拿' : i === 2 ? '主戰場' : i === 3 ? '勝負手' : i === 4 ? '第 5 題在這' : '放棄'));
+      bp.appendChild(tr);
+    });
+
     const freq = {};
     EXAMS.forEach(e => e.ps.forEach(p => { freq[p.uva] = (freq[p.uva] || 0) + 1; }));
     const s1 = new Set(P1.map(p => p.uva));
@@ -784,7 +798,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v8';                     // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v9';                     // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
