@@ -6,7 +6,8 @@
   const ALLSOL = Object.assign({}, SOL,
     typeof SOL2 !== 'undefined' ? SOL2 : {},
     typeof SOL3 !== 'undefined' ? SOL3 : {},
-    typeof SOL4 !== 'undefined' ? SOL4 : {});
+    typeof SOL4 !== 'undefined' ? SOL4 : {},
+    typeof SOL5 !== 'undefined' ? SOL5 : {});
   const stat = u => (typeof UST !== 'undefined' && UST[u]) || null;
 
   const S = {
@@ -826,7 +827,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v10';                    // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v11';                    // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
