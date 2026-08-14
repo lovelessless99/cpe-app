@@ -3,7 +3,7 @@
   'use strict';
 
   // 兩份詳解合併：SOL = 一星 49 題，SOL2 = 歷屆考古題
-  const ALLSOL = Object.assign({}, SOL, typeof SOL2 !== 'undefined' ? SOL2 : {});
+  const ALLSOL = Object.assign({}, SOL, typeof SOL2 !== 'undefined' ? SOL2 : {}, typeof SOL3 !== 'undefined' ? SOL3 : {});
   const stat = u => (typeof UST !== 'undefined' && UST[u]) || null;
 
   const S = {

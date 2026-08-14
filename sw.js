@@ -1,6 +1,6 @@
 /* Service Worker — app shell 快取，離線可用
    改版時把 VERSION 加一，舊快取會自動清掉 */
-const VERSION = 'cpe-v4';
+const VERSION = 'cpe-v5';
 const SHELL = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const SHELL = [
   './js/data.js',
   './js/solutions.js',
   './js/solutions2.js',
+  './js/solutions3.js',
   './js/stats.js',
   './js/stl.js',
   './js/hl.js',
