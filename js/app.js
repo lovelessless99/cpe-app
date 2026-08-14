@@ -209,7 +209,11 @@
       b.appendChild(field('題意', s.q));
 
       // 輸入輸出格式與範例：讓你不用點連結就能開始寫
-      const io = (typeof IO !== 'undefined') ? IO[p.uva] : null;
+      const io = [
+        typeof IO !== 'undefined' ? IO : null,
+        typeof IO2 !== 'undefined' ? IO2 : null,
+        typeof IO3 !== 'undefined' ? IO3 : null
+      ].reduce((r, m) => r || (m && m[p.uva]) || null, null);
       if (io) {
         b.appendChild(field('輸入', io.i));
         b.appendChild(field('輸出', io.o));
@@ -228,9 +232,13 @@
             d.appendChild(el('pre', 'io', txt));
             return d;
           };
-          g.appendChild(mk('範例輸入', io.s[0]));
-          g.appendChild(mk('範例輸出', io.s[1]));
+          g.appendChild(mk('測試輸入', io.s[0]));
+          g.appendChild(mk('預期輸出', io.s[1]));
           b.appendChild(g);
+          const n = el('div', 'legend');
+          n.innerHTML = '這組測資是<b>自行整理</b>用來讓你先驗證程式的，不等同官方範例。' +
+            '通過之後仍要送出去讓判題機驗。';
+          b.appendChild(n);
         }
       }
 
@@ -827,7 +835,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v12';                    // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v13';                    // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
