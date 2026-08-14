@@ -612,6 +612,19 @@ nav {
 /* 長程式碼在面板內仍要能滾到底 */
 .sheetbody pre, .skillbody pre { max-width: 100%; }
 
+/* 沒有十足把握的詳解 */
+.unsure {
+  border-left: 3px solid var(--tle, var(--gold));
+  background: var(--gold-soft);
+  padding: 11px 13px; border-radius: 0 8px 8px 0;
+  font-size: 13px; line-height: 1.65; color: var(--ink);
+}
+.unsure b { color: var(--gold-hi); }
+.solq {
+  background: var(--surface-2); color: var(--ink-2);
+  border: 1px dashed var(--line);
+}
+
 /* 範例輸入 / 輸出 */
 .samples { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media (max-width: 520px) { .samples { grid-template-columns: 1fr; } }

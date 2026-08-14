@@ -8,7 +8,8 @@
     typeof SOL3 !== 'undefined' ? SOL3 : {},
     typeof SOL4 !== 'undefined' ? SOL4 : {},
     typeof SOL5 !== 'undefined' ? SOL5 : {},
-    typeof SOL6 !== 'undefined' ? SOL6 : {});
+    typeof SOL6 !== 'undefined' ? SOL6 : {},
+    typeof SOL7 !== 'undefined' ? SOL7 : {});
   const stat = u => (typeof UST !== 'undefined' && UST[u]) || null;
 
   const S = {
@@ -207,6 +208,13 @@
         t.innerHTML = html; f.appendChild(t);
         return f;
       };
+      if (s.unsure) {
+        const w = el('div', 'unsure');
+        w.innerHTML = '<b>這題我沒有十足把握。</b>解法方向應該是對的，' +
+          '但<b>輸入輸出的細節（格式、邊界、句型）請以判題結果為準</b>——' +
+          '第一次送出若 WA，先懷疑格式而不是演算法。';
+        b.appendChild(w);
+      }
       b.appendChild(field('題意', s.q));
 
       // 輸入輸出格式與範例：讓你不用點連結就能開始寫
@@ -214,7 +222,8 @@
         typeof IO !== 'undefined' ? IO : null,
         typeof IO2 !== 'undefined' ? IO2 : null,
         typeof IO3 !== 'undefined' ? IO3 : null,
-        typeof IO4 !== 'undefined' ? IO4 : null
+        typeof IO4 !== 'undefined' ? IO4 : null,
+        typeof IO5 !== 'undefined' ? IO5 : null
       ].reduce((r, m) => r || (m && m[p.uva]) || null, null);
       if (io) {
         b.appendChild(field('輸入', io.i));
@@ -305,7 +314,9 @@
       row.appendChild(m);
       // WA/AC 比高 = 輸出格式陷阱題，值得先警告
       if (st && st.w >= 1.6) row.appendChild(el('span', 'badge trapb', '格式'));
-      if (ALLSOL[p.uva]) row.appendChild(el('span', 'badge hasol', '詳解'));
+      if (ALLSOL[p.uva]) row.appendChild(el('span',
+        'badge ' + (ALLSOL[p.uva].unsure ? 'solq' : 'hasol'),
+        ALLSOL[p.uva].unsure ? '詳解?' : '詳解'));
       row.tabIndex = 0;
       row.onclick = () => openSheet(p);
       row.onkeydown = e => { if (e.key === 'Enter') openSheet(p); };
@@ -837,7 +848,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v14';                    // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v15';                    // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
