@@ -567,22 +567,23 @@ int main() {
 using namespace std;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     int n; double d; int kase = 0;
-    while (scanf("%d %lf", &n, &d) == 2 && (n || d)) {
+    while (cin >> n >> d && (n || d)) {
         vector<pair<double,double>> v;
         bool ok = true;
         for (int i = 0; i < n; i++) {
-            double x, y; scanf("%lf %lf", &x, &y);
+            double x, y; cin >> x >> y;
             if (y > d) ok = false;                    // 無解，但要讀完
             else { double w = sqrt(d*d - y*y); v.push_back({x + w, x - w}); }
         }
-        printf("Case %d: ", ++kase);
-        if (!ok) { printf("-1\\n"); continue; }
+        cout << "Case " << ++kase << ": ";
+        if (!ok) { cout << "-1\\n"; continue; }
         sort(v.begin(), v.end());                     // 依右端點排序
         int cnt = 0; double last = -1e18;
         for (auto &[r, l] : v)
             if (l > last) { cnt++; last = r; }        // 放在右端點
-        printf("%d\\n", cnt);
+        cout << cnt << "\\n";
     }
 }`
 },

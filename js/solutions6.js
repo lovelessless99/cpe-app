@@ -28,13 +28,15 @@ int main() {
 using namespace std;
 
 int main() {
-    int h, m;
-    while (scanf("%d:%d", &h, &m) == 2 && (h || m)) {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
+    int h, m; char colon;
+    cout << fixed << setprecision(3);
+    while (cin >> h >> colon >> m && (h || m)) {   // 讀 H:MM
         double mh = 6.0 * m;                      // 分針
         double hh = 30.0 * h + 0.5 * m;           // 時針會隨分鐘移動
         double d = fabs(hh - mh);
         if (d > 180) d = 360 - d;                 // 取較小的夾角
-        printf("%.3f\\n", d);
+        cout << d << "\\n";
     }
 }`
 },
@@ -224,9 +226,10 @@ int main() {
 using namespace std;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     int n, c;
     bool first = true;
-    while (scanf("%d %d", &n, &c) == 2) {
+    while (cin >> n >> c) {
         vector<int> pr{1};                        // 本題把 1 也算質數
         for (int i = 2; i <= n; i++) {
             bool ok = true;
@@ -237,11 +240,11 @@ int main() {
         int take = (L % 2) ? 2 * c - 1 : 2 * c;   // 依奇偶決定取幾個
         take = min(take, L);
         int st = max(0, (L - take) / 2);
-        if (!first) printf("\\n");
+        if (!first) cout << "\\n";
         first = false;
-        printf("%d %d:", n, c);
-        for (int i = st; i < st + take && i < L; i++) printf(" %d", pr[i]);
-        printf("\\n");
+        cout << n << " " << c << ":";
+        for (int i = st; i < st + take && i < L; i++) cout << " " << pr[i];
+        cout << "\\n";
     }
 }`
 },
@@ -271,7 +274,7 @@ int main() {
         for (int i = 1; i <= n; i++) {
             int tot = win[i] + lose[i];
             if (tot == 0) cout << "-\\n";           // 全平手
-            else printf("%.3f\\n", (double)win[i] / tot);
+            else cout << fixed << setprecision(3) << (double)win[i] / tot << "\\n";
         }
     }
 }`
@@ -482,12 +485,14 @@ bool isP(long long n) {
 }
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     long long a, b;
-    while (scanf("%lld %lld", &a, &b) == 2) {
+    cout << fixed << setprecision(2);
+    while (cin >> a >> b) {
         long long cnt = 0, tot = b - a + 1;        // 含兩端
         for (long long n = a; n <= b; n++)
             if (isP(n * n + n + 41)) cnt++;
-        printf("%.2f\\n", 100.0 * cnt / tot);
+        cout << 100.0 * cnt / tot << "\\n";
     }
 }`
 },

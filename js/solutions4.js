@@ -88,10 +88,11 @@ int main() {
 using namespace std;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     string s;
     while (getline(cin, s)) {
-        for (char c : s) putchar(c - 7);
-        putchar('\\n');
+        for (char c : s) cout << char(c - 7);
+        cout << "\\n";
     }
 }`
 },
@@ -215,6 +216,7 @@ int main() {
 using namespace std;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     string s; int from, to;
     while (cin >> s >> from >> to) {
         long long v = 0;
@@ -226,8 +228,8 @@ int main() {
         if (v == 0) r = "0";
         while (v) { int d = v % to; r += (d < 10 ? char('0'+d) : char('A'+d-10)); v /= to; }
         reverse(r.begin(), r.end());
-        if (r.size() > 7) printf("  ERROR\\n");     // 超過 7 位
-        else printf("%7s\\n", r.c_str());           // 靠右對齊寬度 7
+        if (r.size() > 7) cout << "  ERROR\\n";      // 超過 7 位
+        else cout << setw(7) << r << "\\n";          // 靠右對齊寬度 7
     }
 }`
 },
@@ -309,9 +311,9 @@ int main() {
                     }
                 }
             }
-        printf("World #%d\\n", kase);
+        cout << "World #" << kase << "\\n" << fixed << setprecision(4);
         for (auto &[ch, c] : cnt)
-            printf("%c: %.4f%%\\n", ch, 100.0 * c / total);
+            cout << ch << ": " << 100.0 * c / total << "%\\n";
     }
 }`
 },

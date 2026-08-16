@@ -55,7 +55,7 @@ int main() {
             auto &v = mp[key(w)];
             int no = 0;
             for (size_t i = 0; i < v.size(); i++)
-                if (v[i] != w) printf("%3d) %s\\n", ++no, v[i].c_str());
+                if (v[i] != w) cout << setw(3) << ++no << ") " << v[i] << "\\n";
             if (!no) cout << "No anagrams for: " << w << "\\n";
         }
     }

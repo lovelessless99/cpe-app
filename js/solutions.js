@@ -71,10 +71,10 @@ using namespace std;
 
 int main() {
     bool left = true;
-    int c;
-    while ((c = getchar()) != EOF) {
-        if (c == '"') { printf(left ? "\`\`" : "''"); left = !left; }
-        else putchar(c);
+    char c;
+    while (cin.get(c)) {
+        if (c == '"') { cout << (left ? "\`\`" : "''"); left = !left; }
+        else cout << c;
     }
 }`
 },
@@ -114,8 +114,8 @@ int main() {
     while (getline(cin, s)) { v.push_back(s); L = max(L, s.size()); }
     for (size_t c = 0; c < L; c++) {
         for (int r = (int)v.size() - 1; r >= 0; r--)
-            putchar(c < v[r].size() ? v[r][c] : ' ');
-        putchar('\\n');
+            cout << (c < v[r].size() ? v[r][c] : ' ');
+        cout << "\\n";
     }
 }`
 },
@@ -304,7 +304,7 @@ int main() {
         cin >> n >> p >> i;
         double q = 1 - p;
         double ans = p * pow(q, i - 1) / (1 - pow(q, n));
-        printf("%.4f\\n", ans);
+        cout << fixed << setprecision(4) << ans << "\\n";
     }
 }`
 },
@@ -414,13 +414,13 @@ int main() {
     long long unit[4] = {10000000LL, 100000LL, 1000LL, 100LL};
     const char* name[4] = {"kuti", "lakh", "hajar", "shata"};
     while (cin >> n) {
-        printf("%4d.\\n", ++kase);
-        if (n == 0) { printf("  0\\n"); continue; }
+        cout << setw(4) << ++kase << ".\\n";
+        if (n == 0) { cout << "  0\\n"; continue; }
         for (int i = 0; i < 4; i++) {
-            if (n / unit[i]) printf("  %lld %s\\n", n / unit[i], name[i]);
+            if (n / unit[i]) cout << "  " << n / unit[i] << " " << name[i] << "\\n";
             n %= unit[i];
         }
-        if (n) printf("  %lld\\n", n);
+        if (n) cout << "  " << n << "\\n";
     }
 }`
 },
@@ -529,12 +529,14 @@ using namespace std;
 const double PI = acos(-1.0), R = 6440.0;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     double h, a; string unit;
+    cout << fixed << setprecision(6);
     while (cin >> h >> a >> unit) {
         if (unit == "min") a /= 60.0;
         if (a > 180) a = 360 - a;
         double r = R + h, th = a * PI / 180.0;
-        printf("%.6f %.6f\\n", r * th, 2 * r * sin(th / 2));
+        cout << r * th << " " << 2 * r * sin(th / 2) << "\\n";
     }
 }`
 },
@@ -551,9 +553,9 @@ int main() {
     while (getline(cin, line)) {
         for (char c : line) {
             size_t p = kb.find(tolower((unsigned char)c));
-            putchar(p == string::npos ? c : kb[p - 2]);
+            cout << (p == string::npos ? c : kb[p - 2]);
         }
-        putchar('\\n');
+        cout << "\\n";
     }
 }`
 },
@@ -575,8 +577,9 @@ int main() {
         while (getline(cin, line) && !line.empty()) { cnt[line]++; total++; }
         if (!first) cout << "\\n";
         first = false;
+        cout << fixed << setprecision(4);
         for (auto &[k, v] : cnt)
-            printf("%s %.4f\\n", k.c_str(), 100.0 * v / total);
+            cout << k << " " << 100.0 * v / total << "\\n";
     }
 }`
 },
@@ -626,7 +629,8 @@ int main() {
         double ax = 0, ay = 0; int c = 0;
         for (int i = 0; i < 4; i++)
             if (i != bi && i != bj) { ax += x[i]; ay += y[i]; c++; }
-        printf("%.3f %.3f\\n", ax - x[bi], ay - y[bi]);
+        cout << fixed << setprecision(3)
+             << ax - x[bi] << " " << ay - y[bi] << "\\n";
     }
 }`
 },

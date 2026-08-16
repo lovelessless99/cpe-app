@@ -43,8 +43,8 @@ int main() {
                 s += i;
                 if (i != n / i) s += n / i;  // 平方數不重複加
             }
-        printf("%5d  %s\\n", n,
-            s == n ? "PERFECT" : (s < n ? "DEFICIENT" : "ABUNDANT"));
+        cout << setw(5) << n << "  "
+             << (s == n ? "PERFECT" : (s < n ? "DEFICIENT" : "ABUNDANT")) << "\\n";
     }
     cout << "END OF OUTPUT\\n";
 }`
@@ -83,25 +83,33 @@ int main() {
 using namespace std;
 
 bool ok(int a, int b) {
-    char buf[12];
-    sprintf(buf, "%05d%05d", a, b);          // 補前導零到各 5 位
+    ostringstream ss;
+    ss << setw(5) << setfill('0') << a
+       << setw(5) << setfill('0') << b;      // 各補到 5 位
+    string s = ss.str();
     int cnt[10] = {0};
-    for (int i = 0; i < 10; i++) cnt[buf[i] - '0']++;
+    for (char c : s) cnt[c - '0']++;
     for (int i = 0; i < 10; i++) if (cnt[i] != 1) return false;
     return true;
 }
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     int n, kase = 0;
-    while (scanf("%d", &n) == 1 && n) {
-        if (kase++) printf("\\n");
+    while (cin >> n && n) {
+        if (kase++) cout << "\\n";
         bool found = false;
         for (int d = 1234; d <= 98765 / n; d++) {
             int num = n * d;
             if (num > 98765) break;
-            if (ok(num, d)) { printf("%05d / %05d = %d\\n", num, d, n); found = true; }
+            if (ok(num, d)) {
+                cout << setw(5) << setfill('0') << num << " / "
+                     << setw(5) << setfill('0') << d << setfill(' ')
+                     << " = " << n << "\\n";
+                found = true;
+            }
         }
-        if (!found) printf("There are no solutions for %d.\\n", n);
+        if (!found) cout << "There are no solutions for " << n << ".\\n";
     }
 }`
 },
@@ -166,12 +174,13 @@ int main() {
 using namespace std;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     int n, kase = 0;
-    while (scanf("%d", &n) == 1) {
+    while (cin >> n) {
         vector<pair<int,int>> v;
         for (int i = 0; i < n; i++) {
-            int h1, m1, h2, m2;
-            scanf("%d:%d %d:%d", &h1, &m1, &h2, &m2);
+            int h1, m1, h2, m2; char sep;
+            cin >> h1 >> sep >> m1 >> h2 >> sep >> m2;   // 讀 hh:mm hh:mm
             v.push_back({h1 * 60 + m1, h2 * 60 + m2});
         }
         sort(v.begin(), v.end());
@@ -181,10 +190,12 @@ int main() {
             cur = max(cur, e);
         }
         if (18 * 60 - cur > best) { best = 18 * 60 - cur; bs = cur; }
-        printf("Day #%d: ", ++kase);
-        if (best == 0) printf("no nap for me today.\\n");
-        else printf("the longest nap starts at %d:%02d and will last for %d hours and %d minutes.\\n",
-                    bs / 60, bs % 60, best / 60, best % 60);
+        cout << "Day #" << ++kase << ": ";
+        if (best == 0) cout << "no nap for me today.\\n";
+        else cout << "the longest nap starts at " << bs / 60 << ":"
+                  << setw(2) << setfill('0') << bs % 60 << setfill(' ')
+                  << " and will last for " << best / 60 << " hours and "
+                  << best % 60 << " minutes.\\n";
     }
 }`
 },
@@ -415,6 +426,7 @@ int main() {
 using namespace std;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(nullptr);
     int n;
     vector<int> pr;
     for (int i = 2; i <= 100; i++) {                 // 100 以內的質數
@@ -422,18 +434,18 @@ int main() {
         for (int j = 2; j * j <= i; j++) if (i % j == 0) { ok = false; break; }
         if (ok) pr.push_back(i);
     }
-    while (scanf("%d", &n) == 1 && n) {
-        printf("%3d! =", n);
+    while (cin >> n && n) {
+        cout << setw(3) << n << "! =";
         int cnt = 0;
         for (int p : pr) {
             if (p > n) break;
             int e = 0;
             for (long long q = p; q <= n; q *= p) e += n / q;   // Legendre
-            if (cnt && cnt % 15 == 0) printf("\\n      ");       // 每行 15 個
-            printf("%3d", e);
+            if (cnt && cnt % 15 == 0) cout << "\\n      ";       // 每行 15 個
+            cout << setw(3) << e;
             cnt++;
         }
-        printf("\\n");
+        cout << "\\n";
     }
 }`
 },

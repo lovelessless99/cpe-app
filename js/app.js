@@ -253,6 +253,24 @@
         }
       }
 
+      // UVa 原文（可展開）
+      const raw = (typeof STMT !== 'undefined') ? STMT[p.uva] : null;
+      if (raw) {
+        const d = el('details', 'rawstmt');
+        const sm = el('summary');
+        sm.appendChild(el('span', null, '原文（English）'));
+        sm.appendChild(el('span', 'rawhint', '點開'));
+        d.appendChild(sm);
+        const bd = el('div', 'rawbody');
+        bd.appendChild(el('pre', 'rawtext', raw));
+        const note = el('div', 'legend');
+        note.innerHTML = '自 UVa 的 PDF 自動解碼取得。<b>數學式與表格排版會失真</b>' +
+          '（斜體變數常會消失），語意請以上方中文題意為準。';
+        bd.appendChild(note);
+        d.appendChild(bd);
+        b.appendChild(d);
+      }
+
       b.appendChild(field('解法', s.h, 'idea'));
       b.appendChild(field('陷阱', s.t, 'trap'));
 
@@ -848,7 +866,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v15';                    // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v16';                    // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 

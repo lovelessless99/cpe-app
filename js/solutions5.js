@@ -286,9 +286,9 @@ int main() {
     while (getline(cin, line)) {
         for (char c : line) {
             size_t p = kb.find(c);
-            putchar(p == string::npos ? c : kb[p - 1]);    // 空白等找不到就原樣輸出
+            cout << (p == string::npos ? c : kb[p - 1]);   // 空白等找不到就原樣輸出
         }
-        putchar('\\n');
+        cout << "\\n";
     }
 }`
 },
@@ -358,9 +358,9 @@ int main() {
         for (unsigned char c : line) if (isalpha(c)) cnt[c]++;
         int mx = 0;
         for (int i = 0; i < 128; i++) mx = max(mx, cnt[i]);
-        if (mx == 0) { printf("\\n"); continue; }
-        for (int i = 0; i < 128; i++) if (cnt[i] == mx) putchar(i);   // 全部並列的
-        printf(" %d\\n", mx);
+        if (mx == 0) { cout << "\\n"; continue; }
+        for (int i = 0; i < 128; i++) if (cnt[i] == mx) cout << char(i);   // 全部並列的
+        cout << " " << mx << "\\n";
     }
 }`
 },
