@@ -722,10 +722,26 @@ details.rawstmt summary::-webkit-details-marker { display: none; }
 }
 details.rawstmt[open] summary { border-bottom: 1px solid var(--line-soft); background: var(--surface-2); }
 .rawbody { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-pre.rawtext {
-  margin: 0; padding: 0; background: none;
-  font-family: var(--sans); font-size: 15.5px; line-height: 1.8;
-  color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere;
+/* 原文的分段排版：標題／段落／範例各自成塊 */
+.stmt { display: flex; flex-direction: column; }
+.stmt-h {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold-hi); margin: 18px 0 8px;
+  padding-bottom: 7px; border-bottom: 1px solid var(--line-soft);
+}
+.stmt-h:first-child { margin-top: 0; }
+.stmt-p {
+  margin: 0 0 11px; font-size: 16.5px; line-height: 1.85;
+  color: var(--ink); overflow-wrap: anywhere;
+}
+.stmt-pre {
+  margin: 0 0 11px; padding: 14px 16px;
+  background: var(--surface-2); border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  font-family: var(--mono); font-size: 14px; line-height: 1.65;
+  color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 /* 用到什麼：資料結構與演算法標籤 */
 .tagrow { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -741,6 +757,5 @@ pre.rawtext {
 }
 
 /* 沒有中文詳解時，原文直接攤開且用正文的對比 */
-pre.rawtext.open {
-  font-size: 17px; line-height: 1.85; color: var(--ink);
-}
+/* 沒有中文詳解時，原文直接攤開 */
+.field .stmt .stmt-p { font-size: 17px; }

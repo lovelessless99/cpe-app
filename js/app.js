@@ -159,6 +159,23 @@
     renderStats();
   }
 
+  /* 原文渲染：STMT[uva] 是區段陣列，範例用等寬保留排版 */
+  function renderStmt(secs) {
+    const wrap = el('div', 'stmt');
+    secs.forEach(s => {
+      if (s.h) wrap.appendChild(el('div', 'stmt-h', s.h));
+      if (s.pre) {
+        const pre = el('pre', 'stmt-pre', s.pre);
+        wrap.appendChild(pre);
+      } else if (s.t) {
+        s.t.split('\n').forEach(par => {
+          if (par.trim()) wrap.appendChild(el('p', 'stmt-p', par));
+        });
+      }
+    });
+    return wrap;
+  }
+
   /* ── 詳解面板 ─────────────────────────────────────────── */
   function openSheet(p) {
     const s = ALLSOL[p.uva];
@@ -200,7 +217,7 @@
       if (raw0) {
         const f = el('div', 'field');
         f.appendChild(el('div', 'lbl', '題目原文'));
-        f.appendChild(el('pre', 'rawtext open', raw0));
+        f.appendChild(renderStmt(raw0));
         b.appendChild(f);
         const note = el('div', 'legend');
         note.innerHTML = '自 UVa 的 PDF 自動解碼取得。<b>數學式與表格排版會失真</b>（斜體變數常會消失）。' +
@@ -283,7 +300,7 @@
         sm.appendChild(el('span', 'rawhint', '點開'));
         d.appendChild(sm);
         const bd = el('div', 'rawbody');
-        bd.appendChild(el('pre', 'rawtext', raw));
+        bd.appendChild(renderStmt(raw));
         const note = el('div', 'legend');
         note.innerHTML = '自 UVa 的 PDF 自動解碼取得。<b>數學式與表格排版會失真</b>' +
           '（斜體變數常會消失），語意請以上方中文題意為準。';
@@ -781,6 +798,63 @@
     tr9.appendChild(t9);
     ov.appendChild(tr9);
 
+    // 逐題明細：三種切法
+    const meta = {};                      // uva -> {title, zj, dates[]}
+    EXAMS.forEach(e => e.ps.forEach(p => {
+      if (!meta[p.uva]) meta[p.uva] = { title: p.title, zj: p.zj, dates: [] };
+      meta[p.uva].dates.push(e.date);
+    }));
+    function ovList(mode) {
+      const t = $('#ovlist'); t.innerHTML = '';
+      let rows;
+      if (mode === 'rep')
+        rows = Object.keys(meta).filter(u => meta[u].dates.length > 1)
+          .sort((a, b) => meta[b].dates.length - meta[a].dates.length || a - b);
+      else if (mode === 's1')
+        rows = [...exU].filter(u => S1.has(u)).sort((a, b) => a - b).map(String);
+      else
+        rows = [...exU].filter(u => !S1.has(u) && !S2.has(u) && !S3.has(u))
+          .sort((a, b) => a - b).map(String);
+
+      const hd = el('tr');
+      ['題號', '題名', mode === 'rep' ? '考過' : '年份', ''].forEach(x => hd.appendChild(el('th', null, x)));
+      t.appendChild(hd);
+      rows.slice(0, 200).forEach(u => {
+        const m = meta[u];
+        const tr = el('tr');
+        tr.appendChild(el('td', 'n', u + (m.zj ? ' / ' + m.zj : '')));
+        const td = el('td');
+        const a = el('a', 'pcode', m.title);
+        a.href = m.zj ? zjURL(m.zj) : uvaURL(u);
+        a.target = '_blank'; a.rel = 'noopener';
+        a.style.fontFamily = 'var(--sans)';
+        td.appendChild(a);
+        tr.appendChild(td);
+        tr.appendChild(el('td', 'n', mode === 'rep'
+          ? '×' + m.dates.length
+          : m.dates[0].slice(0, 4)));
+        const bd = el('td');
+        if (ALLSOL[u]) bd.appendChild(el('span', 'badge hasol', '詳解'));
+        else if (typeof STMT !== 'undefined' && STMT[u]) bd.appendChild(el('span', 'badge stmtb', '題目'));
+        tr.appendChild(bd);
+        t.appendChild(tr);
+      });
+      if (rows.length > 200) {
+        const tr = el('tr');
+        const td = el('td', 'n'); td.colSpan = 4;
+        td.textContent = '（共 ' + rows.length + ' 題，只顯示前 200）';
+        tr.appendChild(td); t.appendChild(tr);
+      }
+    }
+    const ovBtns = $('#ovseg').querySelectorAll('button');
+    ovBtns.forEach(b => {
+      b.onclick = () => {
+        ovBtns.forEach(x => x.classList.remove('on'));
+        b.classList.add('on'); ovList(b.dataset.o);
+      };
+    });
+    ovList('rep');
+
     const freq = {};
     EXAMS.forEach(e => e.ps.forEach(p => { freq[p.uva] = (freq[p.uva] || 0) + 1; }));
     const s1 = new Set(P1.map(p => p.uva));
@@ -922,7 +996,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v17';                    // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v18';                    // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
