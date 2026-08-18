@@ -44,7 +44,8 @@
     typeof SOL39 !== 'undefined' ? SOL39 : {},
     typeof SOL40 !== 'undefined' ? SOL40 : {},
     typeof SOL41 !== 'undefined' ? SOL41 : {},
-    typeof SOL42 !== 'undefined' ? SOL42 : {});
+    typeof SOL42 !== 'undefined' ? SOL42 : {},
+    typeof SOL43 !== 'undefined' ? SOL43 : {});
   const stat = u => (typeof UST !== 'undefined' && UST[u]) || null;
 
   const S = {
@@ -1031,7 +1032,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v52';                 // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v53';                 // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 
