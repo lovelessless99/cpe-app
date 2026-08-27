@@ -420,44 +420,45 @@ int main() {
   },
 
   '10234': {
-    unsure: true,
-    q: `N-Gram 是指長度為 N 的子字串。給定一個字串 S，請找出其中「出現次數最多」的 N-Gram（出現位置可以重疊，例如 "bcbcbc" 中 "cbc" 出現 2 次）。比較時要忽略大小寫；若有多個並列，輸出字典序（ASCII）最小的那一個。
+    q: `N-Gram 是指長度為 N 的子字串。給定一個字串 S，請找出其中「出現次數最多」的 N-Gram（出現位置可以重疊，例如 "bcbcbc" 中 "cbc" 出現 2 次）。
 
-輸入：多組測資。每組第一行是字串 S，下一行是查詢數 Q，接著 Q 行、每行一個 N。
+比較時要忽略大小寫；若有多個並列，輸出字典序（ASCII 值）最小的那一個。
+
+輸入：多組測資。每組第一行是字串 S（不超過 1000 個字元，可以是任何可列印的 ASCII 字元），下一行是查詢數 T，接著 T 行、每行一個 N（0 < N ≤ S 的長度）。
 輸出：對每個 N 輸出一行「出現次數 該 Gram」，中間恰好一個空白。
 
 範例輸入
 In theory, there is no difference between theory and practice, but in practice, there is.
 2
-3
-8
+4
+9
 
 範例輸出
 4 the
 2 practice`,
-    h: `作法本身很單純：把 S 轉成小寫，對每個查詢的 N，把所有長度 N 的子字串丟進 map 計數，取「次數最多、次數相同取字典序最小」的那一個。
+    h: `作法本身很單純：把 S 轉成小寫，對每個查詢的 N，把「所有」長度 N 的子字串丟進 map 計數，取「次數最多、次數相同取字典序最小」的那一個。
 
     for i = 0 .. len−N:
         cnt[ S.substr(i, N) ]++
-    掃過 map，取 (次數最大, 字串最小) 的項目
+    掃過 map（map 本身已按字典序），只在「次數嚴格更多」時更新答案，自然就會取到字典序最小的那個。
 
-複雜度 O(Q · len · N)，字串長度上限不大，直接做就行（也可以用後綴陣列加速，但沒必要）。
+複雜度 O(T · len · N)，len ≤ 1000，直接做就行。
 
-【樣本推出來的重要規則：空白不算在 Gram 裡】
-如果把原字串（含空白）直接切 3-gram，" th"（空白+th）與 "the" 都恰好出現 4 次；而空白的 ASCII 是 32，比 't' 小，依「字典序最小」的規則應該輸出 " th" 才對。但題目的答案是 "the"——所以**空白不會成為 Gram 的一部分**，必須先把空白去掉再切。
+【關鍵：空白與標點都算在 Gram 裡】
+這題的範例乍看很怪——N = 4 卻輸出看起來只有 3 個字元的 "the"、N = 9 卻輸出 8 個字元的 "practice"。原因是：**答案的 Gram 開頭是一個空白**。
 
-我把「去掉所有非英數字元」之後再切，得到
-    N = 3 → the 出現 4 次 ✓
-    N = 8 → practice 出現 2 次 ✓
-與題目輸出一致。
+我把整串（含空白與標點、只轉小寫）拿去統計，得到
+    N = 4 → " the"（空白 + the）出現 4 次，是最多的
+    N = 9 → " practice"（空白 + practice）出現 2 次
+輸出時是「次數 + 一個分隔空白 + Gram」，所以實際印出來是「4  the」與「2  practice」（兩個空白）——PDF 的排版把連續空白併掉了，才看起來像一個空白。
 
-（另外提醒：「去掉空白但保留標點」在這組樣本上也會得到同樣的答案，樣本無法區分這兩種寫法——所以標點到底算不算，從這組範例看不出來。）`,
-    t: `1. 大小寫要忽略——先整串轉小寫再處理，輸出的 Gram 也是小寫。
-2. 空白不能算進 Gram（由樣本反推出來的規則），否則 N=3 會輸出 " th" 而不是 "the"。
-3. 標點符號是否要一起去掉，這組範例分辨不出來；我採用「只保留英數字」的寫法。若判定不過，改成「只去空白、保留標點」再試一次是最可能的修正方向。
-4. 出現位置可以重疊，所以是「每個起始位置都算一次」，不是不重疊地切。
-5. 次數相同時取「ASCII 字典序最小」的 Gram。
-6. N 可能大於字串長度——這時沒有任何 Gram，要依題目情境處理（一般測資不會給）。`,
+而且因為空白的 ASCII 是 32，比任何字母都小，在「次數相同取字典序最小」的規則下，開頭有空白的 Gram 本來就容易勝出。這正好互相印證：不需要（也不可以）把空白或標點濾掉。`,
+    t: `1. 千萬別把空白或標點過濾掉——整串原樣（只轉小寫）拿去切 Gram 才是對的。被範例的「4 the」誤導而去濾掉非英數字元，是這題最大的坑。
+2. 範例的 N 是 4 與 9，不是 3 與 8；答案分別是 " the" 與 " practice"（都有前導空白）。
+3. 大小寫要忽略——先整串轉小寫，輸出的 Gram 也是小寫。
+4. 出現位置可以重疊，所以是「每個起始位置各算一次」，不是不重疊地切。
+5. 次數相同時取 ASCII 字典序最小；用 std::map<string,int> 走訪時本來就是字典序，只要在「嚴格更多」時更新即可。
+6. S 是一整行（含空白），一定要用 getline 讀，不能用 cin >> string。`,
     c: `#include <bits/stdc++.h>
 using namespace std;
 
@@ -466,27 +467,24 @@ int main() {
     cin.tie(nullptr);
     string line;
     while (getline(cin, line)) {
-        // 轉小寫，並濾掉非英數字元（樣本顯示空白不能算進 Gram）
-        string s;
-        for (size_t i = 0; i < line.size(); i++) {
-            unsigned char c = (unsigned char)line[i];
-            if (isalnum(c)) s += (char)tolower(c);
-        }
-        int q;
-        if (!(cin >> q)) break;
-        for (int t = 0; t < q; t++) {
+        // 只轉小寫，空白與標點都保留
+        string s = line;
+        for (size_t i = 0; i < s.size(); i++)
+            s[i] = (char)tolower((unsigned char)s[i]);
+
+        int T;
+        if (!(cin >> T)) break;
+        for (int t = 0; t < T; t++) {
             int N;
             cin >> N;
             map<string, int> cnt;
             for (int i = 0; i + N <= (int)s.size(); i++) cnt[s.substr(i, N)]++;
             int bestC = -1;
             string bestG;
-            for (map<string, int>::iterator it = cnt.begin(); it != cnt.end(); ++it) {
-                // map 本身已按字典序，所以只在「嚴格更多」時更新，自然取到最小的
+            for (map<string, int>::iterator it = cnt.begin(); it != cnt.end(); ++it)
                 if (it->second > bestC) { bestC = it->second; bestG = it->first; }
-            }
-            if (bestC < 0) cout << "0\\n";
-            else cout << bestC << " " << bestG << "\\n";
+            if (bestC < 0) cout << "0\n";
+            else cout << bestC << " " << bestG << "\n";
         }
         getline(cin, line);                       // 吃掉最後一個 N 後面的換行
     }
