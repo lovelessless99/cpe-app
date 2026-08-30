@@ -7,7 +7,7 @@
    要重載兩次才正常——會出現「index.html 是新的、app.js 是舊的」這種
    難以察覺的半更新狀態。這個 App 只有幾百 KB，freshness 遠比省那幾十毫秒重要。 */
 
-const VERSION = 'cpe-v88';
+const VERSION = 'cpe-v89';
 const SHELL = [
   './',
   './index.html',
@@ -91,6 +91,7 @@ const SHELL = [
   './js/solutions76.js',
   './js/solutions77.js',
   './js/solutions78.js',
+  './js/solutions79.js',
   './js/io.js',
   './js/io2.js',
   './js/io3.js',
