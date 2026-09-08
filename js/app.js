@@ -159,11 +159,28 @@
   }
 
   /* ── 設定與倒數 ───────────────────────────────────────── */
-  function defaultExam() {
+  /* 官方公告場次（cpe.cse.nsysu.edu.tw）。報名開放 14:25、截止 18:00 */
+  const SESSIONS = [
+    { exam: '2026-10-06', open: '2026-09-22T14:25', shut: '2026-10-02T18:00' },
+    { exam: '2026-12-08', open: '2026-11-24T14:25', shut: '2026-12-04T18:00' },
+    { exam: '2027-03-23', open: '2027-03-09T14:25', shut: '2027-03-19T18:00' },
+    { exam: '2027-05-25', open: '2027-05-11T14:25', shut: '2027-05-21T18:00' }
+  ];
+  const sessionFor = d => SESSIONS.find(s => s.exam === d) || null;
+  function nextSession() {
     const t = todayLocal();
-    for (const g of ['2026-10-14', '2026-12-09', '2027-03-24']) if (parseISO(g) > t) return g;
-    return iso(new Date(t.getTime() + 60 * 864e5));
+    return SESSIONS.find(s => parseISO(s.exam) >= t) || null;
   }
+  function defaultExam() {
+    const s = nextSession();
+    if (s) return s.exam;
+    return iso(new Date(todayLocal().getTime() + 60 * 864e5));
+  }
+  /* 舊版存過推估日期的，官方場次公布後自動清掉，讓它跟著官方走 */
+  (function migrateExam() {
+    const cur = S.get('exam', null);
+    if (cur && ['2026-10-14', '2026-12-09', '2027-03-24'].indexOf(cur) >= 0) S.set('exam', null);
+  })();
   const getExam = () => S.get('exam', null) || defaultExam();
   const getStart = () => { let s = S.get('start', null); if (!s) { s = iso(todayLocal()); S.set('start', s); } return s; };
 
@@ -174,22 +191,78 @@
     $('#cdunit').textContent = left === 0 ? '就是今天' : '天';
     $('#cddate').textContent = getExam().replace(/-/g, ' / ') + '（' + '日一二三四五六'[exam.getDay()] + '）';
 
-    const regOpen = new Date(exam.getTime() - 15 * 864e5);
-    const regShut = new Date(exam.getTime() - 5 * 864e5);
+    const ses = sessionFor(getExam());          // 官方公告場次就用真實報名時間
+    const now = new Date();
+    const regOpen = ses ? new Date(ses.open) : new Date(exam.getTime() - 15 * 864e5);
+    const regShut = ses ? new Date(ses.shut) : new Date(exam.getTime() - 5 * 864e5);
+    const md = d => (d.getMonth() + 1) + '/' + d.getDate();
+    const hm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const est = ses ? '' : '推估 ';
+
     const meta = $('#cdmeta'); meta.innerHTML = '';
     const add = (cls, txt) => meta.appendChild(el('span', 'pill' + (cls ? ' ' + cls : ''), txt));
-    if (left < 0) add('shut', '考試日期已過，請到設定更新');
-    else if (t < regOpen) {
-      add('', '報名尚未開始 · 推估 ' + iso(regOpen).slice(5).replace('-', '/') + ' 開放');
-      add('', '距報名 ' + daysBetween(t, regOpen) + ' 天');
-    } else if (t <= regShut) {
-      add('open', '報名中 · 推估 ' + iso(regShut).slice(5).replace('-', '/') + ' 截止');
-      add('open', '剩 ' + daysBetween(t, regShut) + ' 天可報名');
-    } else add('shut', '報名推估已截止');
 
-    $('#cdnote').innerHTML = S.get('exam', null)
-      ? '報名區間為<b>推估值</b>（開始約 15 天前、截止約 5 天前），實際以官網公告為準。'
-      : '⚠️ 這是<b>預設日期，不是官方公告</b>。2026 場次尚未公布，請到 <a href="https://cpe.cse.nsysu.edu.tw/" target="_blank" rel="noopener">官網</a> 查到日期後按右上「設定」填入。';
+    let phase = 'over';
+    if (left < 0) add('shut', '考試日期已過，請到設定更新');
+    else if (now < regOpen) {
+      phase = 'before';
+      add('', '報名尚未開始 · ' + est + md(regOpen) + ' ' + hm(regOpen) + ' 開放');
+      add('', '距報名 ' + daysBetween(t, new Date(regOpen.getFullYear(), regOpen.getMonth(), regOpen.getDate())) + ' 天');
+    } else if (now <= regShut) {
+      phase = 'open';
+      add('open', '報名中 · ' + est + md(regShut) + ' ' + hm(regShut) + ' 截止');
+      add('open', '剩 ' + daysBetween(t, new Date(regShut.getFullYear(), regShut.getMonth(), regShut.getDate())) + ' 天可報名');
+    } else { phase = 'closed'; add('shut', '報名' + (ses ? '' : '推估') + '已截止'); }
+
+    $('#cdnote').innerHTML = ses
+      ? '報名時間為<b>官方公告</b>：' + ses.open.replace('T', ' ') + ' ~ ' + ses.shut.replace('T', ' ') + '。'
+      : (S.get('exam', null)
+        ? '這個日期是你自己填的，報名區間為<b>推估值</b>（開始約 15 天前、截止約 5 天前），請以 <a href="https://cpe.cse.nsysu.edu.tw/" target="_blank" rel="noopener">官網</a> 為準。'
+        : '⚠️ 官方公告的場次都過了，這是<b>推估日期</b>，請到 <a href="https://cpe.cse.nsysu.edu.tw/" target="_blank" rel="noopener">官網</a> 查新場次後按右上「設定」填入。');
+
+    renderAlerts(phase, left, regOpen, regShut);
+  }
+
+  /* 首頁提醒：報名快開放 / 報名中快截止 / 考試快到 */
+  function renderAlerts(phase, left, regOpen, regShut) {
+    const box = $('#alertbox');
+    if (!box) return;
+    box.innerHTML = '';
+    const t = todayLocal();
+    const dOpen = daysBetween(t, new Date(regOpen.getFullYear(), regOpen.getMonth(), regOpen.getDate()));
+    const dShut = daysBetween(t, new Date(regShut.getFullYear(), regShut.getMonth(), regShut.getDate()));
+    const fmt = d => (d.getMonth() + 1) + '/' + d.getDate() + ' ' +
+      String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+
+    const push = (lvl, title, body) => {
+      const a = el('div', 'alert ' + lvl);
+      a.appendChild(el('div', 'alerttitle', title));
+      const p = el('div', 'alertbody');
+      p.innerHTML = body;
+      a.appendChild(p);
+      box.appendChild(a);
+    };
+
+    if (phase === 'before' && dOpen <= 7)
+      push(dOpen <= 2 ? 'hot' : 'warm',
+        dOpen === 0 ? '報名今天開放' : '報名 ' + dOpen + ' 天後開放',
+        '開放時間 <b>' + fmt(regOpen) + '</b>，到 <b>' + fmt(regShut) + '</b> 截止。' +
+        '<a href="https://cpe.cse.nsysu.edu.tw/" target="_blank" rel="noopener">前往官網</a>');
+
+    if (phase === 'open')
+      push(dShut <= 3 ? 'hot' : 'warm',
+        dShut === 0 ? '報名今天截止' : '報名中，剩 ' + dShut + ' 天',
+        '截止時間 <b>' + fmt(regShut) + '</b>，逾時就要等下一場。' +
+        '<a href="https://cpe.cse.nsysu.edu.tw/" target="_blank" rel="noopener">前往官網報名</a>');
+
+    if (phase === 'closed' && left > 3)
+      push('warm', '報名已截止',
+        '這一場不能再報名了。如果沒報到，下一場請看設定裡的場次表。');
+
+    if (left >= 0 && left <= 7)
+      push(left <= 2 ? 'hot' : 'warm',
+        left === 0 ? '今天就是考試日' : '考試剩 ' + left + ' 天',
+        left === 0 ? '記得帶證件、提早到考場。' : '這幾天把<b>技巧</b>與<b>考古</b>兩頁掃過一遍就好，不要開新題目。');
   }
 
   /* ── 今日 ─────────────────────────────────────────────── */
@@ -1168,7 +1241,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v119';                 // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v120';                 // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 

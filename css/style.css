@@ -219,6 +219,27 @@ h3 { font-size: 18px; font-weight: 700; }
 }
 .pill.open { color: var(--ac); border-color: color-mix(in srgb, var(--ac) 40%, transparent); background: var(--ac-soft); }
 .pill.shut { color: var(--wa); border-color: color-mix(in srgb, var(--wa) 40%, transparent); background: var(--wa-soft); }
+/* ── 首頁提醒（報名 / 考試將至）─────────────────────────── */
+#alertbox:empty { display: none; }
+.alert {
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 11px;
+  border: 1px solid var(--line); background: var(--surface-2);
+}
+.alert + .alert { margin-top: -3px; }
+.alerttitle { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+.alertbody { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); }
+.alertbody a { color: inherit; }
+.alert.warm {
+  color: var(--ac); border-color: color-mix(in srgb, var(--ac) 40%, transparent);
+  background: var(--ac-soft);
+}
+.alert.warm .alertbody { color: color-mix(in srgb, var(--ac) 82%, var(--ink)); }
+.alert.hot {
+  color: var(--wa); border-color: color-mix(in srgb, var(--wa) 45%, transparent);
+  background: var(--wa-soft);
+}
+.alert.hot .alertbody { color: color-mix(in srgb, var(--wa) 82%, var(--ink)); }
+
 .estnote { font-size: 11.5px; color: var(--ink-3); margin-top: 9px; line-height: 1.5; }
 
 /* ── 今日 ────────────────────────────────────────────────── */

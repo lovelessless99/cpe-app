@@ -8,7 +8,7 @@
 **沒有 build step、沒有外部相依**（CSP 擋 CDN，必須能離線運作）。
 擁有者目標：一個月衝刺、一場 7 題**過 5 題**、用 **C++**。
 
-## 目前狀態（cpe-v119）
+## 目前狀態（cpe-v120）
 
 | 項目 | 數字 |
 |---|---|
@@ -32,6 +32,7 @@ js/problems.js      P1/P2/P3（星等）+ EXAMS（歷屆），題名經 uHunt �
 js/statements.js    內建題敘抽取版（1.4 MB，品質差，只當備援）
 js/tags.js          由 tools/mktags2.js 自動產生
 js/audit.js         由 tools/genaudit.js 自動產生（詳解可信度頁的資料）
+                    考試場次表 SESSIONS 寫在 js/app.js（「設定與倒數」區塊）
 js/hl.js            自製 C++ syntax highlighter
 tools/              維護腳本（見下）
 NOT_DONE.md         21 題未收錄的理由
@@ -84,8 +85,8 @@ node --check js/solutions109.js
 sed -i 's|<script src="js/solutions108.js"></script>|&\n<script src="js/solutions109.js"></script>|' index.html
 sed -i "s|    typeof SOL108 !== 'undefined' ? SOL108 : {});|    typeof SOL108 !== 'undefined' ? SOL108 : {},\n    typeof SOL109 !== 'undefined' ? SOL109 : {});|" js/app.js
 sed -i "s|'./js/solutions108.js',|&\n  './js/solutions109.js',|" sw.js
-sed -i "s/const BUILD = 'cpe-v119'/const BUILD = 'cpe-v120'/" js/app.js
-sed -i "s/const VERSION = 'cpe-v119'/const VERSION = 'cpe-v120'/" sw.js
+sed -i "s/const BUILD = 'cpe-v120'/const BUILD = 'cpe-v121'/" js/app.js
+sed -i "s/const VERSION = 'cpe-v120'/const VERSION = 'cpe-v121'/" sw.js
 
 # 5. 重建衍生資料 + 驗證（tools 內的清單也要加 solutions109）
 node tools/mktags2.js && node tools/genaudit.js
@@ -160,6 +161,25 @@ node tools/check9.js && node tools/check.js | tail -3
 ### 3. 題庫規模
 
 已經夠了。805 題、歷屆全覆蓋，缺的不是量。
+
+## 考試場次
+
+官方場次寫死在 `js/app.js` 的 `SESSIONS`（「設定與倒數」區塊）：
+
+```js
+{ exam: '2026-10-06', open: '2026-09-22T14:25', shut: '2026-10-02T18:00' }
+```
+
+四場都是星期二，報名一律「考前 14 天 14:25 開放、考前 4 天 18:00 截止」。
+預設會自動選下一場；使用者在設定裡自己填日期時，若不是官方場次就退回
+「考前約 15 天開放、約 5 天截止」的推估並在畫面上註明。
+
+首頁的提醒卡（`renderAlerts`）在這些時機出現：
+報名 7 天內開放、報名進行中、報名剛截止（考前 3 天內不再顯示以免蓋掉考試提醒）、
+考試 7 天內。剩 ≤ 2~3 天會轉成紅色 `hot`。
+
+**官方公布新場次時**：把新的三元組加進 `SESSIONS` 即可，其他不用動。
+最後一場過了之後畫面會自動退回推估模式並提示去官網查。
 
 ## Git 慣例
 

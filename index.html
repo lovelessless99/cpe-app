@@ -35,6 +35,8 @@
   <section class="view on" id="v-today">
     <div class="stack">
 
+      <div id="alertbox"></div>
+
       <div class="hero">
         <div class="aurora" aria-hidden="true"></div>
         <div class="eyebrow">距離下次考試</div>
@@ -412,12 +414,13 @@
   <form method="dialog" class="dlg">
     <div>
       <h2 style="margin-bottom:4px">設定</h2>
-      <p class="lead">2026 年場次官方尚未公告，日期請以官網為準。</p>
+      <p class="lead">已內建官方公告的四個場次，預設會自動選下一場。要考別場再自己改。</p>
     </div>
     <div>
       <div class="eyebrow" style="margin-bottom:5px">下次考試日期</div>
       <input type="date" id="examdate">
-      <p class="estnote">報名區間會由考試日期推估（開始約 15 天前、截止約 5 天前）。查到官方公告後請回來改成正確日期。</p>
+      <p class="estnote">官方場次：<span class="mono">2026/10/06</span>、<span class="mono">2026/12/08</span>、<span class="mono">2027/03/23</span>、<span class="mono">2027/05/25</span>（都是星期二）。
+      選到這四個日期會顯示官方報名時間；填其他日期則以「開始約 15 天前、截止約 5 天前」推估。</p>
     </div>
     <div>
       <div class="eyebrow" style="margin-bottom:5px">計畫起算日</div>
