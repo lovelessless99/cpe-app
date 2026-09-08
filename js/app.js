@@ -1085,10 +1085,81 @@
     };
   });
 
+  /* ── 詳解可信度 ───────────────────────────── */
+  function renderAudit() {
+    const box = $('#auditbox');
+    if (!box || typeof AUDIT_UNSURE === 'undefined') return;
+    box.innerHTML = '';
+    const tot = $('#auditotal');
+    if (tot) tot.textContent = Object.keys(ALLSOL).length;
+
+    const star = n => n === 1 ? '☆' : n === 2 ? '☆☆' : n === 3 ? '☆☆☆' : '考古';
+
+    const group = (title, lead, rows, openFirst) => {
+      const d = el('details', 'skill');
+      if (openFirst) d.open = true;
+      const h = el('summary', 'skillhead');
+      h.appendChild(el('h3', null, title));
+      h.appendChild(el('span', 'lv lv2', rows.length + ' 題'));
+      d.appendChild(h);
+      const b = el('div', 'skillbody');
+      const f0 = el('div', 'field');
+      f0.appendChild(el('div', 'lbl', '這一組是什麼'));
+      f0.appendChild(el('div', 'txt', lead));
+      b.appendChild(f0);
+      rows.forEach(r => {
+        const f = el('div', 'field');
+        f.appendChild(el('div', 'lbl', 'UVa ' + r.id + '  ·  ' + star(r.star)));
+        const tx = el('div', 'txt');
+        tx.appendChild(el('b', null, r.title || ('UVa ' + r.id)));
+        if (r.why) {
+          tx.appendChild(el('br'));
+          tx.appendChild(document.createTextNode(r.why));
+        }
+        f.appendChild(tx);
+        b.appendChild(f);
+      });
+      d.appendChild(b);
+      box.appendChild(d);
+    };
+
+    const A = AUDIT_UNSURE.filter(r => r.cat === 'A');
+    const C = AUDIT_UNSURE.filter(r => r.cat !== 'A');
+    group('存疑：已寫明痑點',
+      '作法有信心，但某個格式或邊界細節無法從原題 PDF 確認。每一題的陷阱欄第一條都寫明了不確定點在哪裡。',
+      A, true);
+    group('存疑：未逐題記錄理由',
+      '這些是早期批次。當時的題敘來自 app 內建的抽取版、沒有附樣例，作法是依題意推導但未經樣例驗證，而且當時沒有把理由逐題寫下來。這是可以補的：現在已經能從 onlinejudge.org 拓回原題 PDF，逐題重新對樣例就能把這一組清掉。',
+      C, false);
+
+    const D = { A: '題敘的關鍵資訊只存在於 PDF 的圖裡',
+                B: 'PDF 抽取把範例或輸出格式毀掉',
+                C: '規則有實質歧義，範例不足以判定',
+                D: '可解但驗證不足' };
+    ['A', 'B', 'C', 'D'].forEach(k => {
+      const rows = AUDIT_NOTDONE.filter(r => r.cat === k);
+      if (rows.length) group('未收錄：' + D[k],
+        '這一類的題目沒有收錄詳解。寧可不收，也不編造題敘、範例或答案。',
+        rows, false);
+    });
+  }
+
+  /* AUDIT_ANCHOR */
   /* ── init ─────────────────────────────────────────────── */
   getStart();
   renderBoard(); renderCountdown(); renderDay(); buildDeck();
   renderList(); renderSkills(); renderRef(); renderPast(); renderQStats();
+  renderAudit();
+
+  const goAudit = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(x => x.classList.remove('on'));
+    $('#v-audit').classList.add('on');
+    window.scrollTo(0, 0);
+  };
+  const ga = $('#gotoaudit'); if (ga) ga.onclick = goAudit;
+  const ab = $('#auditback');
+  if (ab) ab.onclick = () => { const b = document.querySelector('.tab[data-v="list"]'); if (b) b.click(); };
 
   const last = S.get('tab', 'today');
   if (last !== 'today') {
@@ -1097,7 +1168,7 @@
   }
 
   /* ── 版本顯示與更新偵測 ───────────────────────────────── */
-  const BUILD = 'cpe-v118';                 // 與 sw.js 的 VERSION 同步
+  const BUILD = 'cpe-v119';                 // 與 sw.js 的 VERSION 同步
   const vEl = $('#buildver');
   if (vEl) vEl.textContent = BUILD + '　·　' + Object.keys(ALLSOL).length + ' 題詳解';
 

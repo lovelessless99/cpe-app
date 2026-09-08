@@ -119,6 +119,9 @@
     </div>
     <div class="card flat plist" id="plist"></div>
     <div class="foot">題名經 uHunt 官方 UVa 題庫逐筆驗證<br>☆ 49 題全部附完整詳解，點題名展開</div>
+    <div style="margin-top:11px;text-align:center">
+      <button class="btn sm" id="gotoaudit">詳解可信度：55 題存疑 / 21 題未收錄</button>
+    </div>
   </section>
 
   <!-- ═══ 練習（卡片 + 抽考）═══ -->
@@ -286,6 +289,27 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- ═══ 詳解可信度 ═══ -->
+  <section class="view" id="v-audit">
+    <div class="card flat" style="margin-bottom:13px">
+      <div class="row">
+        <div style="flex:1">
+          <div class="eyebrow">詳解可信度</div>
+          <div class="lead" style="margin-top:2px">哪些題目的作法沒有完全確認，以及哪些題目刻意沒收錄。</div>
+        </div>
+        <button class="btn sm" id="auditback">返回</button>
+      </div>
+    </div>
+    <div class="card flat" style="margin-bottom:13px">
+      <p class="lead"><b>原則：寧可不收，也不編造題敘、範例或答案。</b>
+      題庫共 <span class="mono" id="auditotal">—</span> 題詳解，其中標記「存疑」的代表
+      <b>作法有信心、但某個細節無法從原題 PDF 確認</b>；
+      上機時若被判 WA，先從這裡列的點去改。</p>
+    </div>
+    <div class="stack" id="auditbox"></div>
+    <div class="foot">這一頁是自動從各題的 unsure 標記與陷阱欄產生的，不是手寫維護</div>
   </section>
 
   <!-- ═══ 考古 ═══ -->
@@ -521,6 +545,7 @@
 <script src="js/solutions106.js"></script>
 <script src="js/solutions107.js"></script>
 <script src="js/solutions108.js"></script>
+<script src="js/audit.js"></script>
 <script src="js/io.js"></script>
 <script src="js/io2.js"></script>
 <script src="js/io3.js"></script>
